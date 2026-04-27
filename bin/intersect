@@ -49,7 +49,7 @@ fi
 
 usage() {
   cat <<'EOF'
-intersect — manage AI-tool config for Claude Code, Codex CLI, Gemini CLI.
+intersect: manage AI-tool config for Claude Code, Codex CLI, Gemini CLI.
 
 Usage:
   intersect                       show this help
@@ -356,7 +356,7 @@ cmd_doctor() {
     if command -v "$tool" >/dev/null 2>&1; then
       local version
       version=$("$tool" --version 2>&1 | head -1 || echo "unknown")
-      echo "  ${C_OK}✓${C_RESET} $tool — $version"
+      echo "  ${C_OK}✓${C_RESET} $tool: $version"
     else
       echo "  ${C_WARN}⚠${C_RESET}  $tool not on PATH"
     fi
@@ -373,13 +373,13 @@ cmd_doctor() {
     local short_dest="~/$dest_rel"
 
     if [[ ! -e "$dest" && ! -L "$dest" ]]; then
-      echo "  ${C_WARN}⚠${C_RESET}  $short_dest — not linked (run: intersect link)"
+      echo "  ${C_WARN}⚠${C_RESET}  $short_dest: not linked (run: intersect link)"
       issues=$((issues + 1))
       continue
     fi
 
     if [[ ! -L "$dest" ]]; then
-      echo "  ${C_FAIL}✗${C_RESET} $short_dest — exists but is not a symlink"
+      echo "  ${C_FAIL}✗${C_RESET} $short_dest: exists but is not a symlink"
       issues=$((issues + 1))
       continue
     fi

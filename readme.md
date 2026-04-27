@@ -5,24 +5,21 @@ Single source of truth for AI-tool preferences shared across Claude Code, Codex 
 ## Quickstart
 
 ```sh
-git clone <repo-url> ~/Public/Intersect
-~/Public/Intersect/bin/intersect install      # put `intersect` on PATH
-intersect link                                # symlink configs into ~/.<tool>/
-intersect doctor                              # verify
+# Installation
+gh repo clone Polytonic/Intersect
+cd Intersect && ./bin/intersect install
+intersect link
 ```
 
-`install` may prompt for `sudo` if the target dir (`/usr/local/bin` by default on macOS) isn't writable. Pass any other dir as a positional arg to skip sudo: `intersect install ~/.local/bin`.
-
-## CLI
-
-```
-intersect                       show help
-intersect help                  show help
-intersect install [DIR]         symlink intersect onto PATH (default: /usr/local/bin)
-intersect uninstall [DIR]       remove the PATH symlink
-intersect link [TOOL...]        symlink config files into ~/.<tool>/
-intersect unlink [TOOL...]      remove config symlinks pointing into this repo
-intersect doctor                diagnose CLI install, link symlinks, tool availability
+## Usage
+```sh
+intersect <command>
+    doctor                diagnose CLI install, link symlinks, tool availability
+    update                git pull --ff-only the repo (no need to cd)
+    link [TOOL...]        symlink config files into ~/.<tool>/
+    unlink [TOOL...]      remove config symlinks pointing into this repo
+    install [DIR]         symlink intersect onto PATH (default: /usr/local/bin)
+    uninstall [DIR]       remove the PATH symlink
 ```
 
 `TOOL` is one or more of `all`, `claude`, `codex`, `gemini`. Both `install` and `link` are idempotent. Both `uninstall` and `unlink` only touch symlinks they own; real files are left alone.
@@ -66,12 +63,15 @@ bin/
 
 All runtime state (sessions, history, sqlite, caches, auth tokens) stays put in each tool's config directory. Nothing here touches it.
 
-## Why lowercase repo files?
+<details>
+<summary><strong>Why lowercase repo files?</strong></summary>
 
 Two reasons, one aesthetic and one technical:
 
 1. The lowercase convention reads less like shouting.
 2. Codex CLI auto-discovers project-level `AGENTS.md` files. If `Intersect/AGENTS.md` were uppercase, running Codex inside this repo would double-load it (project AGENTS.md plus the symlinked global one). Lowercase prevents the collision while the destination symlink (`~/.codex/AGENTS.md`) keeps the case Codex expects. macOS APFS is case-insensitive by default, so the collision risk exists only on case-sensitive volumes (or other OSes), but the lowercase convention costs nothing and removes the risk wherever it exists.
+
+</details>
 
 ## Primitives and pipelines
 
@@ -113,11 +113,10 @@ The most truthful check: do the CLIs actually load the symlinked configs? See [`
 
 ## Adding new content
 
-Edit files in this repo. Edits flow through the symlinks immediately, so the next CLI session picks them up without further action. Commit and push, then `git pull` on other machines.
+Fork the repo, edit files in your fork. Edits flow through the symlinks immediately, so the next CLI session picks them up without further action. Commit and push to your fork, then `intersect update` on other machines.
 
 For tool-specific overrides (e.g., a Claude-only behavior that shouldn't apply to Codex), add the rule to `core/claude.md` before the `@./agents.md` line. The wrapper exists to host these without polluting the universal file.
 
 ## Known limitations
 
 - `tools/codex/config.toml` is symlinked, which means Codex CLI may write to the file (project trust entries, plugin enablement, marketplace state) and those writes propagate via git. Curate before committing if a write contains absolute paths or per-machine state that shouldn't travel.
-- The `~/Public/` location is shared by macOS File Sharing only when File Sharing is enabled (off by default). Move the repo to `~/Code/` or similar if you prefer to be safe.

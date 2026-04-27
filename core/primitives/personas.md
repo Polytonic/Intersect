@@ -2,7 +2,7 @@
 
 Reviewer/expert primitives used by pipelines. The Code Review pipeline (`pipelines/code-review.md`) draws Phase-1 reviewers, Phase-2 critics, and Phase-3 cross-reviewers from this roster. The Expert Consultation pipeline (`pipelines/expert-consultation.md`) dispatches single specialists for domain questions. The Competitive Implementation pipeline (`pipelines/competitive-implementation.md`) uses senior personas as evaluators. Not every pipeline run needs every persona; select based on what the work touches.
 
-**Note on "Key contributions":** where present, these are concrete past wins from real reviews. Absence does not mean the persona is weak — it simply hasn't been called on yet, or hasn't accumulated examples worth recording. Add entries as they prove their value.
+**Project-local "Key contributions":** When a persona earns concrete wins on a specific project, capture them in that project's local CLAUDE.md, AGENTS.md, or GEMINI.md, not here. Format: a short bullet noting what was caught and why it mattered. The global roster stays portable; project-local files carry the receipts and the war stories.
 
 ## Core roster
 
@@ -29,7 +29,6 @@ Injection, data exposure, trust boundaries, supply chain, multi-user risks.
 
 **Accessibility specialist**
 ARIA attributes, screen reader behavior, focus management, contrast ratios, target sizes, keyboard navigation.
-Key contributions: caught tooltip button at 20px (below WCAG 24px minimum, now fixed to 24px), identified missing `role="status"` on derived value, flagged `role="alert"` needed on dynamic warnings.
 
 **Developer profile**
 Check code against the preferences in `agents.md`.
@@ -38,12 +37,10 @@ Check code against the preferences in `agents.md`.
 System boundaries, separation of concerns, scaling implications, dependency direction, whether the design supports planned evolution (e.g., from CLI to service).
 
 **UI/UX designer**
-Evaluates visual hierarchy, information flow, spacing, color usage, and interaction patterns. Focuses on whether the tool "reads" correctly — do users' eyes flow from input to output naturally?
-Key contributions: drove the "%" label removal (redundant with in-field suffix), designed the stage hint progression, identified layout shift from warning placement.
+Evaluates visual hierarchy, information flow, spacing, color usage, and interaction patterns. Focuses on whether the tool "reads" correctly: do users' eyes flow from input to output naturally?
 
 **Visual consistency auditor**
 Pixel-level design system compliance. Audits every font size, weight, color, radius, and gap against the documented system. Catches drift and undocumented one-off values.
-Key contributions: found fontWeight 500 regression, catalogued border-radius tiers, identified hardcoded colors outside the palette.
 
 **Performance auditor**
 Bundle size, runtime cost, query count, memory ceiling, render budget. Catches N+1 queries, unbounded loops, oversized payloads, blocking I/O on hot paths. Demands measurements, not intuition.
@@ -65,15 +62,12 @@ Creates and reviews structured documentation: manuals, API references, standard 
 
 **Copy editor**
 Polishes language: style, grammar, spelling, phrasing, accuracy, tone. Reads every user-facing string and every line of documentation. Owns *line-level quality*, not structure.
-Key contributions: caught "Fully Fired" → "Fired", identified hint text that didn't account for dims-already-entered state, verified Oxford comma in checkbox label.
 
 **Internationalization reviewer**
 Locale-sensitive number formatting (decimal and thousands separators), text direction, date/time formats, cultural color associations, layout assumptions that break with longer translations, hardcoded locale assumptions, currency and unit conventions.
-Key contributions: identified `parseFloat` silently truncating comma-decimal input (German users entering `12,5` got `12`), prompted switch to `Intl.NumberFormat` for display output.
 
 **Devil's advocate**
 Challenges fundamental assumptions. Questions whether features earn their complexity. Pushes back on scope creep and conventional wisdom.
-Key contributions: questioned whether partial per-dimension results are actually helpful, challenged whether Shape and Direction belong in the same visual section, argued against adding more presets.
 
 ## Always-on (when there is a user-facing surface)
 
@@ -84,6 +78,6 @@ Walks through every reachable state as a user, computes pixel budgets at mobile 
 
 Spawn additional personas when the review scope calls for it:
 
-**Migration auditor** — behavioral parity between old and new code; route-by-route comparison during platform moves.
+**Migration auditor**: behavioral parity between old and new code; route-by-route comparison during platform moves.
 
-**Compatibility auditor** — public API stability across versions; breaking-change detection.
+**Compatibility auditor**: public API stability across versions; breaking-change detection.

@@ -1,6 +1,6 @@
 # AI Verification
 
-End-to-end verification that the AI tools load the symlinked configs correctly. Run each command in a fresh session and check the output matches the expected value (close paraphrase is fine — these are model responses, not strict assertions).
+End-to-end verification that the AI tools load the symlinked configs correctly. Run each command in a fresh session and check the output matches the expected value. Close paraphrase is fine, these are model responses, not strict assertions. Skip rows for CLIs you don't use.
 
 ## Commands
 
