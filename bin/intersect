@@ -1,0 +1,431 @@
+#!/usr/bin/env bash
+# intersect manages this AI-tool config repo. Two layers of installation:
+#   - install/uninstall: put the `intersect` CLI itself onto PATH
+#   - link/unlink: symlink ~/.claude, ~/.codex, ~/.gemini at this repo
+# Doctor diagnoses both. Named after The Intersect from Chuck.
+
+set -euo pipefail
+
+# Resolve Script Path Through Symlinks
+# When invoked via a symlink (e.g., /opt/homebrew/bin/intersect → repo/bin/intersect)
+# we must follow it to find the actual repo, not the symlink's parent. BSD readlink
+# on macOS lacks `-f`, so traverse manually for portability.
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [[ -L "$SCRIPT_PATH" ]]; do
+  SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+  SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+  [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
+done
+REPO_DIR="$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)"
+DEFAULT_INSTALL_DIR="/usr/local/bin"
+
+# === Symlink Spec for `link` ===
+# tool|destination_relative_to_HOME|source_relative_to_REPO_DIR
+# settings.local.json is intentionally absent: it is machine-local by design.
+LINKS=(
+  "claude|.claude/CLAUDE.md|core/claude.md"
+  "claude|.claude/settings.json|tools/claude/settings.json"
+  "codex|.codex/AGENTS.md|core/agents.md"
+  "codex|.codex/config.toml|tools/codex/config.toml"
+  "gemini|.gemini/GEMINI.md|core/agents.md"
+  "gemini|.gemini/settings.json|tools/gemini/settings.json"
+)
+
+TOOLS=("claude" "codex" "gemini")
+
+# === Color Codes ===
+# Disabled when stdout is not a tty so logs and pipes stay clean.
+if [[ -t 1 ]]; then
+  C_OK=$'\033[0;32m'
+  C_FAIL=$'\033[0;31m'
+  C_WARN=$'\033[0;33m'
+  C_DIM=$'\033[2m'
+  C_RESET=$'\033[0m'
+else
+  C_OK=""; C_FAIL=""; C_WARN=""; C_DIM=""; C_RESET=""
+fi
+
+# === Helpers ===
+
+usage() {
+  cat <<'EOF'
+intersect — manage AI-tool config for Claude Code, Codex CLI, Gemini CLI.
+
+Usage:
+  intersect                       show this help
+  intersect help                  show this help
+  intersect install [DIR]         symlink intersect onto PATH (default: /usr/local/bin)
+  intersect uninstall [DIR]       remove the PATH symlink
+  intersect link [TOOL...]        symlink config files into ~/.<tool>/
+  intersect unlink [TOOL...]      remove config symlinks pointing into this repo
+  intersect update                git pull --ff-only the repo (no need to cd)
+  intersect doctor                diagnose CLI install, link symlinks, tool availability
+
+TOOL: all | claude | codex | gemini  (multiple allowed; default all)
+DIR:  any directory; sudo will be invoked if it is not writable.
+
+Both install and link are idempotent. Both uninstall and unlink only touch
+symlinks they own; real files are left alone.
+EOF
+}
+
+# resolve_targets normalises the tool list, expanding "all" and validating names.
+# Echoes the resolved tools, one per line.
+resolve_targets() {
+  local args=("$@")
+  if [[ ${#args[@]} -eq 0 ]]; then
+    args=("all")
+  fi
+
+  local out=()
+  for arg in "${args[@]}"; do
+    case "$arg" in
+      all) out+=("${TOOLS[@]}") ;;
+      claude|codex|gemini) out+=("$arg") ;;
+      *)
+        echo "${C_FAIL}ERROR${C_RESET}: unknown tool: $arg (allowed: all, claude, codex, gemini)" >&2
+        exit 1
+        ;;
+    esac
+  done
+
+  # Deduplicate while preserving order.
+  local seen=""
+  for tool in "${out[@]}"; do
+    case " $seen " in *" $tool "*) continue ;; esac
+    seen="$seen $tool"
+    echo "$tool"
+  done
+}
+
+# sudo_if_needed should run the given command, prefixing sudo iff $1 is not writable.
+sudo_if_needed() {
+  local target_dir="$1"
+  shift
+  if [[ -w "$target_dir" ]]; then
+    "$@"
+  else
+    sudo "$@"
+  fi
+}
+
+# === install / uninstall (CLI on PATH) ===
+
+cmd_install() {
+  local target_dir="${1:-$DEFAULT_INSTALL_DIR}"
+  local cli_dest="$target_dir/intersect"
+  local cli_source="$REPO_DIR/bin/intersect"
+
+  # Ensure the target dir exists. Use sudo only when the parent isn't writable.
+  if [[ ! -d "$target_dir" ]]; then
+    if mkdir -p "$target_dir" 2>/dev/null; then
+      :
+    else
+      echo "Creating $target_dir requires sudo."
+      sudo mkdir -p "$target_dir"
+    fi
+  fi
+
+  # Idempotent skip.
+  if [[ -L "$cli_dest" ]] && [[ "$(readlink "$cli_dest")" == "$cli_source" ]]; then
+    echo "${C_OK}✓${C_RESET} already installed: $cli_dest → $cli_source"
+    return 0
+  fi
+
+  # Back up any pre-existing entry at the destination.
+  if [[ -e "$cli_dest" || -L "$cli_dest" ]]; then
+    local backup="$cli_dest.before-intersect.$(date +%Y%m%d-%H%M%S)"
+    sudo_if_needed "$target_dir" mv "$cli_dest" "$backup"
+    echo "${C_DIM}backed up existing entry to $backup${C_RESET}"
+  fi
+
+  # Atomic Symlink Swap
+  # Create the link under a temp name then mv-rename so the destination
+  # is never empty even if interrupted between steps.
+  local tmp="$cli_dest.intersect.$$"
+  sudo_if_needed "$target_dir" ln -s "$cli_source" "$tmp"
+  sudo_if_needed "$target_dir" mv -f "$tmp" "$cli_dest"
+
+  echo "${C_OK}✓${C_RESET} installed: $cli_dest → $cli_source"
+
+  # PATH Hint
+  # Warn if the install dir isn't on PATH so the user knows to fix their shell.
+  case ":$PATH:" in
+    *":$target_dir:"*) ;;
+    *)
+      echo "${C_WARN}note${C_RESET}: $target_dir is not on PATH. Add to your shell config:"
+      echo "  export PATH=\"$target_dir:\$PATH\""
+      ;;
+  esac
+}
+
+cmd_uninstall() {
+  local target_dir="${1:-$DEFAULT_INSTALL_DIR}"
+  local cli_dest="$target_dir/intersect"
+  local cli_source="$REPO_DIR/bin/intersect"
+
+  if [[ ! -e "$cli_dest" && ! -L "$cli_dest" ]]; then
+    echo "${C_OK}✓${C_RESET} not installed at $cli_dest"
+    return 0
+  fi
+
+  # Safety Gate
+  # Only remove if it's our symlink. Real files or links to elsewhere stay put.
+  if [[ -L "$cli_dest" ]] && [[ "$(readlink "$cli_dest")" == "$cli_source" ]]; then
+    sudo_if_needed "$target_dir" rm "$cli_dest"
+    echo "${C_OK}✓${C_RESET} removed: $cli_dest"
+  else
+    echo "${C_WARN}⚠${C_RESET}  refusing to remove $cli_dest (not our symlink)"
+    return 1
+  fi
+}
+
+# === link / unlink (config symlinks) ===
+
+cmd_link() {
+  local targets
+  targets=$(resolve_targets "$@")
+
+  local timestamp
+  timestamp="$(date +%Y%m%d-%H%M%S)"
+  local backup_dir="$HOME/.config-backup-$timestamp"
+
+  local linked=0 already_correct=0 backed_up=0
+
+  for spec in "${LINKS[@]}"; do
+    local tool="${spec%%|*}"
+    local rest="${spec#*|}"
+    local dest_rel="${rest%%|*}"
+    local source_rel="${rest##*|}"
+    local dest="$HOME/$dest_rel"
+    local source="$REPO_DIR/$source_rel"
+
+    if ! grep -qx "$tool" <<<"$targets"; then
+      continue
+    fi
+
+    if [[ ! -e "$source" ]]; then
+      echo "${C_FAIL}ERROR${C_RESET}: repo source missing: $source" >&2
+      exit 1
+    fi
+
+    mkdir -p "$(dirname "$dest")"
+
+    if [[ -L "$dest" ]] && [[ "$(readlink "$dest")" == "$source" ]]; then
+      already_correct=$((already_correct + 1))
+      continue
+    fi
+
+    # Back Up Displaced Content
+    # Same-second collision check guards against re-running within one second.
+    if [[ -e "$dest" || -L "$dest" ]]; then
+      mkdir -p "$backup_dir/$(dirname "$dest_rel")"
+      if [[ -e "$backup_dir/$dest_rel" || -L "$backup_dir/$dest_rel" ]]; then
+        echo "${C_FAIL}ERROR${C_RESET}: backup target already exists: $backup_dir/$dest_rel" >&2
+        echo "Wait one second and try again so the timestamp directory rotates." >&2
+        exit 1
+      fi
+      mv "$dest" "$backup_dir/$dest_rel"
+      backed_up=$((backed_up + 1))
+    fi
+
+    # Atomic Symlink Swap
+    local tmp="$dest.intersect.$$"
+    ln -s "$source" "$tmp"
+    mv -f "$tmp" "$dest"
+    linked=$((linked + 1))
+  done
+
+  echo "${C_OK}✓${C_RESET} linked: $linked new, $already_correct already correct, $backed_up backed up"
+  if [[ $backed_up -gt 0 ]]; then
+    echo "  backup: $backup_dir"
+  fi
+}
+
+cmd_unlink() {
+  local targets
+  targets=$(resolve_targets "$@")
+
+  local removed=0 skipped=0 not_present=0
+
+  for spec in "${LINKS[@]}"; do
+    local tool="${spec%%|*}"
+    local rest="${spec#*|}"
+    local dest_rel="${rest%%|*}"
+    local source_rel="${rest##*|}"
+    local dest="$HOME/$dest_rel"
+    local source="$REPO_DIR/$source_rel"
+
+    if ! grep -qx "$tool" <<<"$targets"; then
+      continue
+    fi
+
+    if [[ ! -e "$dest" && ! -L "$dest" ]]; then
+      not_present=$((not_present + 1))
+      continue
+    fi
+
+    # Safety Gate
+    # Only remove symlinks pointing into this repo. Real files left alone.
+    if [[ -L "$dest" ]] && [[ "$(readlink "$dest")" == "$source" ]]; then
+      rm "$dest"
+      removed=$((removed + 1))
+    else
+      echo "${C_WARN}⚠${C_RESET}  skipped (not our symlink): $dest"
+      skipped=$((skipped + 1))
+    fi
+  done
+
+  echo "${C_OK}✓${C_RESET} removed: $removed, skipped: $skipped, not present: $not_present"
+}
+
+# === update ===
+
+# cmd_update should pull the latest from the repo's default remote without
+# requiring the user to cd. Fast-forward only so the command never silently
+# creates merge commits in a personal config repo.
+cmd_update() {
+  if [[ ! -d "$REPO_DIR/.git" ]]; then
+    echo "${C_FAIL}ERROR${C_RESET}: $REPO_DIR is not a git repository" >&2
+    exit 1
+  fi
+  echo "${C_DIM}Pulling $REPO_DIR (--ff-only)${C_RESET}"
+  git -C "$REPO_DIR" pull --ff-only
+}
+
+# === doctor ===
+
+cmd_doctor() {
+  local issues=0
+
+  echo "${C_DIM}== Repo ==${C_RESET}"
+  echo "  $REPO_DIR"
+  if [[ ! -d "$REPO_DIR/.git" ]]; then
+    echo "  ${C_WARN}⚠${C_RESET}  not a git repository"
+    issues=$((issues + 1))
+  fi
+
+  echo ""
+  echo "${C_DIM}== Repo Files ==${C_RESET}"
+  local repo_files=(
+    "core/agents.md"
+    "core/claude.md"
+    "core/primitives/personas.md"
+    "core/primitives/tools.md"
+    "core/pipelines/code-review.md"
+    "core/pipelines/expert-consultation.md"
+    "core/pipelines/competitive-implementation.md"
+    "core/pipelines/cross-model-consultation.md"
+    "tools/claude/settings.json"
+    "tools/codex/config.toml"
+    "tools/gemini/settings.json"
+  )
+  for f in "${repo_files[@]}"; do
+    if [[ -e "$REPO_DIR/$f" ]]; then
+      echo "  ${C_OK}✓${C_RESET} $f"
+    else
+      echo "  ${C_FAIL}✗${C_RESET} missing: $f"
+      issues=$((issues + 1))
+    fi
+  done
+
+  echo ""
+  echo "${C_DIM}== CLI Install ==${C_RESET}"
+  local cli_source="$REPO_DIR/bin/intersect"
+  local found_install=""
+  for dir in /usr/local/bin /opt/homebrew/bin "$HOME/.local/bin"; do
+    local cli_dest="$dir/intersect"
+    if [[ -L "$cli_dest" ]] && [[ "$(readlink "$cli_dest")" == "$cli_source" ]]; then
+      echo "  ${C_OK}✓${C_RESET} $cli_dest → bin/intersect"
+      found_install="$cli_dest"
+      break
+    fi
+  done
+  if [[ -z "$found_install" ]]; then
+    if command -v intersect >/dev/null 2>&1; then
+      local found="$(command -v intersect)"
+      echo "  ${C_WARN}⚠${C_RESET}  intersect on PATH at $found, but not via 'intersect install'"
+    else
+      echo "  ${C_WARN}⚠${C_RESET}  intersect not on PATH (run: intersect install)"
+    fi
+  fi
+
+  echo ""
+  echo "${C_DIM}== Tool Availability ==${C_RESET}"
+  for tool in "${TOOLS[@]}"; do
+    if command -v "$tool" >/dev/null 2>&1; then
+      local version
+      version=$("$tool" --version 2>&1 | head -1 || echo "unknown")
+      echo "  ${C_OK}✓${C_RESET} $tool — $version"
+    else
+      echo "  ${C_WARN}⚠${C_RESET}  $tool not on PATH"
+    fi
+  done
+
+  echo ""
+  echo "${C_DIM}== Link Symlinks ==${C_RESET}"
+  for spec in "${LINKS[@]}"; do
+    local rest="${spec#*|}"
+    local dest_rel="${rest%%|*}"
+    local source_rel="${rest##*|}"
+    local dest="$HOME/$dest_rel"
+    local source="$REPO_DIR/$source_rel"
+    local short_dest="~/$dest_rel"
+
+    if [[ ! -e "$dest" && ! -L "$dest" ]]; then
+      echo "  ${C_WARN}⚠${C_RESET}  $short_dest — not linked (run: intersect link)"
+      issues=$((issues + 1))
+      continue
+    fi
+
+    if [[ ! -L "$dest" ]]; then
+      echo "  ${C_FAIL}✗${C_RESET} $short_dest — exists but is not a symlink"
+      issues=$((issues + 1))
+      continue
+    fi
+
+    local actual
+    actual="$(readlink "$dest")"
+    if [[ "$actual" == "$source" ]]; then
+      echo "  ${C_OK}✓${C_RESET} $short_dest → $source_rel"
+    else
+      echo "  ${C_FAIL}✗${C_RESET} $short_dest → $actual (expected → $source)"
+      issues=$((issues + 1))
+    fi
+  done
+
+  echo ""
+  if [[ $issues -eq 0 ]]; then
+    echo "${C_OK}All systems go.${C_RESET}"
+    return 0
+  else
+    echo "${C_FAIL}$issues issue(s) found.${C_RESET}"
+    return 1
+  fi
+}
+
+# === Entry Point ===
+
+main() {
+  local cmd="${1:-help}"
+  if [[ $# -gt 0 ]]; then
+    shift
+  fi
+  case "$cmd" in
+    help|--help|-h)  usage ;;
+    install)         cmd_install "$@" ;;
+    uninstall)       cmd_uninstall "$@" ;;
+    link)            cmd_link "$@" ;;
+    unlink)          cmd_unlink "$@" ;;
+    update)          cmd_update ;;
+    doctor)          cmd_doctor ;;
+    *)
+      echo "${C_FAIL}ERROR${C_RESET}: unknown command: $cmd" >&2
+      echo "" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
+}
+
+main "$@"

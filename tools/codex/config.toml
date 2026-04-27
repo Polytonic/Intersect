@@ -1,0 +1,43 @@
+model = "gpt-5.4"
+model_reasoning_effort = "xhigh"
+[projects."/Users/kfung"]
+trust_level = "trusted"
+
+[projects."/Users/kfung/Documents/Codex/2026-04-26/do-you-have-a-chatgpt-pro"]
+trust_level = "trusted"
+
+[projects."/Users/kfung/Public/Atlas"]
+trust_level = "trusted"
+
+[projects."/Users/kfung/Public/Intersect"]
+trust_level = "trusted"
+
+[tui.model_availability_nux]
+"gpt-5.4" = 1
+"gpt-5.5" = 2
+
+[marketplaces.openai-bundled]
+last_updated = "2026-04-26T22:09:02Z"
+source_type = "local"
+source = "/Users/kfung/.codex/.tmp/bundled-marketplaces/openai-bundled"
+
+[marketplaces.openai-primary-runtime]
+last_updated = "2026-04-26T20:53:29Z"
+source_type = "local"
+source = "/Users/kfung/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
+
+[plugins."browser-use@openai-bundled"]
+enabled = true
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true
+
+[features]
+memories = true
+prevent_idle_sleep = true

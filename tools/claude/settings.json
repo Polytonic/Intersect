@@ -1,0 +1,7 @@
+{
+  "syntaxHighlightingDisabled": false,
+  "effortLevel": "max",
+  "enabledPlugins": {
+    "swift-lsp@claude-plugins-official": true
+  }
+}
