@@ -6,7 +6,7 @@ Single source of truth for AI-tool preferences shared across Claude Code, Codex 
 
 ```sh
 # Installation
-gh repo clone Polytonic/Intersect
+git clone https://github.com/Polytonic/Intersect.git
 cd Intersect && ./bin/intersect install
 intersect link
 ```
