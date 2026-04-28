@@ -78,7 +78,7 @@ Debugging is hypothesis-driven, not stab-in-the-dark. Treat each bug as a scient
 - **Apply this profile to all generated code**: Style, quality bar, accessibility, copy, and writing rules are hard requirements. Hold them in mind, and check compliance before presenting code. Primitives, personas, and pipelines are selectable per the Composable Primitives section, pick what fits the task.
 - **Plan first**: Propose the approach and wait for approval before implementing T3+ work. T1 fixes proceed directly; T2 plans briefly and proceeds without approval. The sizing threshold lives in Task Triage.
 - **Explain changes**: After making edits, briefly explain what changed and why
-- **Test before done**: Always run or test code before considering a task complete. For UI changes, see Testing Philosophy § Black-box inspection.
+- **Test before done**: Always run or test code before considering a task complete. Invoke the Regression Test pipeline (`pipelines/regression-test.md`) for automated verification. For UI changes, see Testing Philosophy § Black-box inspection.
 - **Never commit without asking**: Do not run `git commit` or `git push` without explicit confirmation
 - **Commit messages use Title Case**: e.g., "Add Nerd Font Patching for Operator Mono". Always check `git log --oneline -5` before committing to match the repo's style
 - Do not create files or directories without mentioning it first
@@ -232,5 +232,6 @@ Composed workflows. Read the relevant pipeline file when starting matching work:
 - **Expert consultation** (`pipelines/expert-consultation.md`): single specialist dispatch.
 - **Competitive implementation** (`pipelines/competitive-implementation.md`): divergent then converge ("red/blue").
 - **Cross-model consultation** (`pipelines/cross-model-consultation.md`): Codex/Gemini second opinion.
+- **Regression test** (`pipelines/regression-test.md`): run automated checks after code-modifying changes, triage failures.
 
 <!-- Add new top-level sections above this line. New primitives go in primitives/, new pipelines in pipelines/. -->

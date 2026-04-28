@@ -316,6 +316,7 @@ cmd_doctor() {
     "core/pipelines/expert-consultation.md"
     "core/pipelines/competitive-implementation.md"
     "core/pipelines/cross-model-consultation.md"
+    "core/pipelines/regression-test.md"
     "tools/claude/settings.json"
     "tools/codex/config.toml"
     "tools/gemini/settings.json"
