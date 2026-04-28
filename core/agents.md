@@ -81,6 +81,7 @@ Debugging is hypothesis-driven, not stab-in-the-dark. Treat each bug as a scient
 - **Test before done**: Always run or test code before considering a task complete. Invoke the Regression Test pipeline (`pipelines/regression-test.md`) for automated verification. For UI changes, see Testing Philosophy § Black-box inspection.
 - **Never commit without asking**: Do not run `git commit` or `git push` without explicit confirmation
 - **Commit messages use Title Case**: e.g., "Add Nerd Font Patching for Operator Mono". Always check `git log --oneline -5` before committing to match the repo's style
+- **Atomic commits**: One logical change per commit. "Add Foo, Update Bar" should split into two commits, "Add Foo" and "Update Bar", assuming each can be individually verified. Mixing unrelated changes makes bisect, revert, and review harder. For pre-push fixes to a recent commit, fold the fix into the original commit (amend or rebase) rather than creating a separate "fix" commit; once pushed, switch to forward-fix commits since rewriting shared history breaks others.
 - Do not create files or directories without mentioning it first
 - Don't suppress warnings or linter errors without justification
 - Don't add dependencies without discussing it first
