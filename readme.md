@@ -99,17 +99,17 @@ intersect doctor
 
 Read-only inspection of current state: repo file presence, CLI install on PATH, every expected link symlink, tool availability with versions. Exits 0 when all is well, 1 when issues are found.
 
-### 2. Logic (`test/test.sh`)
+### 2. Logic (`bin/test.sh`)
 
 ```sh
-bash test/test.sh
+bash bin/test.sh
 ```
 
 Sandboxed in a temp `HOME` so it never touches your real `~/.claude` etc. Exercises the install/uninstall/link/unlink/doctor logic deterministically. Run after any change to `bin/intersect`. Exits non-zero on failure.
 
 ### 3. End-to-end with the AI tools
 
-The most truthful check: do the CLIs actually load the symlinked configs? See [`test/test.md`](test/test.md) for the AI-runnable verification commands and the directive AI agents should follow when editing this repo.
+The most truthful check: do the CLIs actually load the symlinked configs? See [`test.md`](test.md) for the AI-runnable verification commands and the directive AI agents should follow when editing this repo.
 
 ## Adding new content
 

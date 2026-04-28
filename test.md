@@ -15,4 +15,4 @@ End-to-end verification that the AI tools load the symlinked configs correctly. 
 
 ## For AI agents working in this repo
 
-This file is the verification checklist for end-to-end behavior. After edits to anything in `core/`, run the matching command above for the affected tool. After edits to `bin/intersect`, run `bash test/test.sh` (logic regression). After any edit, `intersect doctor` is a fast sanity check on current state.
+This file is the verification checklist for end-to-end behavior. After edits to anything in `core/`, run the matching command above for the affected tool. After edits to `bin/intersect`, run `bash bin/test.sh` (logic regression). After any edit, `intersect doctor` is a fast sanity check on current state.
