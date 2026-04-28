@@ -13,6 +13,4 @@ End-to-end verification that the AI tools load the symlinked configs correctly. 
 | Codex | `codex exec "First persona under Core roster in ~/.codex/AGENTS.md"` | `Principal engineer` |
 | Gemini | `gemini -p "H1 of ~/.gemini/GEMINI.md"` | `# Developer Profile` |
 
-## For AI agents working in this repo
-
-This file is the verification checklist for end-to-end behavior. After edits to anything in `core/`, run the matching command above for the affected tool. After edits to `bin/intersect`, run `bash bin/test.sh` (logic regression). After any edit, `intersect doctor` is a fast sanity check on current state.
+See readme.md § For AI agents working in this repo for the directive that pairs with this verification table.

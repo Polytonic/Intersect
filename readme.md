@@ -111,6 +111,16 @@ Sandboxed in a temp `HOME` so it never touches your real `~/.claude` etc. Exerci
 
 The most truthful check: do the CLIs actually load the symlinked configs? See [`test.md`](test.md) for the AI-runnable verification commands and the directive AI agents should follow when editing this repo.
 
+## For AI agents working in this repo
+
+Source of truth for AI-tool preferences. After any change:
+
+- Edits to `core/`: run the matching AI verification command from [`test.md`](test.md) for the affected tool.
+- Edits to `bin/intersect`: run `bash bin/test.sh`.
+- Any edit: run `intersect doctor`.
+
+Do not edit `.claude/settings.local.json` (gitignored, machine-local). Avoid editing `tools/codex/config.toml`'s `[projects.*]`, `[marketplaces.*]`, or `[tui.*]` sections; Codex re-creates those per machine and they should not travel.
+
 ## Adding new content
 
 Fork the repo, edit files in your fork. Edits flow through the symlinks immediately, so the next CLI session picks them up without further action. Commit and push to your fork, then `intersect update` on other machines.
