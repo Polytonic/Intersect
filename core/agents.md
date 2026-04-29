@@ -43,9 +43,9 @@ References to `primitives/...` and `pipelines/...` in this profile resolve relat
 - Language-specific rules live in Code Style
 
 ## Working Style
-- Fanatical, relentless attention to detail. Will iterate on something until it looks right, works right, and feels right. This applies to everything: pixel-level CSS, button interaction states, copy wording, DOM structure, color consistency.
+- Fanatical, relentless attention to detail. Iterates until output looks right, works right, and feels right across code (naming, structure, narrative flow, idiom), UI (pixel-level CSS, button states, color consistency, DOM structure), and copy (wording, register, density). Bars are measured and reviewed, not eyeballed.
 - Approaches problems from multiple angles using different personas and perspectives (e.g., how would an economist, a physicist, or a doctor analyze this problem). The right set of personas depends on the task.
-- Will catch subtle visual bugs: sticky hover on mobile, separators inheriting text-decoration, missing press states, inconsistent interaction patterns between similar controls. Don't assume visual details are "close enough."
+- Builds review standards and verification loops that catch subtle visual, behavioral, and technical regressions before they become subjective review debates. Hover gating, press states, decoration inheritance, and cross-control consistency are checklist items, not judgment calls. Visual details meet the bar or fail review; "close enough" is not a state.
 - Prefers to understand *why* things work, not just *what* to do. Will ask probing questions about CSS, framework patterns, and browser behavior.
 - Reads 700+ WPM with strong comprehension, types 160 WPM sustained (180 burst). Expects interaction pacing calibrated to this: don't gate on assumed reading time, and expect rapid follow-ups.
 
@@ -67,10 +67,10 @@ This file defines building blocks (reviewer personas, tool affordances) and comp
 
 ## Coding Philosophy
 - **Software is data transformation**: Programs are pipelines: data comes in, gets transformed through a series of functions, and data comes out. This is the unifying principle behind the preference for pure functions, composition, and returning values. Functions are transformations, not procedures. Design them as pipeline stages: clear input, clear output, no hidden state. This is a design mindset, not strict immutability dogma. Idiomatic mutation (returning `self` for chaining in Python, returning `T&` in C++) is fine because it serves the same goal: clear data flow through composable stages
-- **Pit of success**: Design systems, APIs, and interfaces so that the easiest path is the correct path. Make it hard to do the wrong thing through types, structure, and constraints, not documentation and discipline. Catch bugs at compile/lint time, not runtime. If users or callers can misuse it, the design is wrong
+- **Pit of success**: Design systems, APIs, and interfaces so the easiest path is the correct path. Encode constraints in types, schemas, interfaces, tests, linters, generated code, or narrow APIs, not in documentation and discipline. Catch bugs at compile/lint time, not runtime. If callers can misuse it, the design is wrong.
 - **Extract for clarity, not for length**: Extract a block into a function when the function name communicates intent better than the inline code does. Don't extract just to hit a line count, and don't keep code inline just to avoid abstraction. The goal is that each level of the code reads as a coherent narrative
 - Prefer functional style over object-oriented: pure functions, transformations, composition
-- **Prefer compositional return values**: Functions return values to enable chaining and composition. Void is acceptable at boundaries (event handlers, lifecycle hooks, destructors, signal handlers, command entry points). **Reason:** Boundary code cannot meaningfully return values; the strict rule generated pointless `return self` at boundaries.
+- **Prefer compositional return values**: Functions return values to enable chaining and composition. Void is acceptable at boundaries (event handlers, lifecycle hooks, destructors, signal handlers, command entry points) and in perf-critical paths (in-place mutation, output parameters) where allocation matters. **Reason:** Boundary code cannot meaningfully return values; the strict rule generated pointless `return self` at boundaries. Perf paths serve the same data-flow goal at lower cost.
 - Avoid regular expressions; they are error-prone and hard to read. Use string methods, parsing libraries, or explicit loops instead. **Reason:** Regex accumulates complexity invisibly and resists refactoring. Library calls are fine even if internally regex-based; the rule is about not writing or maintaining raw regex.
 - **Errors are data**: Treat errors as values flowing through the pipeline, not as exceptional control flow. Propagate them explicitly. Fail fast at system boundaries (user input, external APIs, file I/O). Handle specific error types, not broad `except:` or `catch(...)` blocks. If an error can't be handled meaningfully, let it propagate rather than swallowing it
 - **Opinionated defaults over configuration**: Prefer tools and designs that do one thing well with zero configuration and good out-of-the-box behavior (e.g., Parcel, black, Go's formatting). Adding a config option is often a failure to make a decision. When building tools or interfaces, pick the right default and ship it, don't punt the choice to the user
@@ -79,12 +79,12 @@ This file defines building blocks (reviewer personas, tool affordances) and comp
 - **Weight reversibility**: When proposing a design choice, name whether the decision is reversible (rename, refactor, undo) or irreversible (data migration, public API, infra commitment). Bias toward reversible options when alternatives are roughly comparable. Spend the irreversibility budget consciously.
 
 ## Testing Philosophy
-- **Mock as little as possible**: Use real implementations, real databases, real file systems whenever feasible. Mocks should be a last resort for things you truly cannot control (external APIs, third-party services, hardware). Real implementations require deterministic setup: use transactions, fixtures, isolated state, and proper cleanup so that "real" doesn't mean "flaky."
+- **Mock as little as possible**: Use real implementations, real databases, real file systems whenever feasible. Mocks should be a last resort for things you truly cannot control (external APIs, third-party services, hardware). Real implementations require deterministic setup: invest in shared test infrastructure (transactions, fixtures, isolated state, proper cleanup) so that "real" doesn't mean "flaky."
 - **Don't test the mock**: The most common testing antipattern: someone builds an elaborate mock, then writes assertions against the mock's behavior instead of the real system's. If the test would still pass after deleting the production code, the test is worthless.
 - **Prefer integration over isolation**: A test that exercises the real code path catches real bugs. A test that exercises a mock catches nothing but typos in the mock setup.
 - **Test behavior, not implementation**: Assert on observable outcomes (return values, side effects, final state), not on internal method calls or call ordering. Tests coupled to implementation break on every refactor, which trains people to stop refactoring.
-- **Determinism is non-negotiable**: No sleeps, no timing-dependent assertions, no uncontrolled randomness. A flaky test is worse than no test because it teaches the team to ignore failures.
-- **Tests should be obvious**: A failing test should make the bug self-evident. Avoid test helper abstractions that hide what's actually being asserted. If you have to read three layers of setup utilities to understand a failure, the test has failed at its job.
+- **Determinism is non-negotiable**: No sleeps, no timing-dependent assertions, no uncontrolled randomness. A flaky test is worse than no test because it teaches the team to ignore failures. Quarantine and fix or delete; don't normalize.
+- **Tests should be obvious**: A failing test should make the bug self-evident. Avoid test helper abstractions that hide what's actually being asserted. If you have to read three layers of setup utilities to understand a failure, the test has failed at its job. The bar is on-call: someone paged at 2am should diagnose from the failure message alone.
 - **Cover the happy path and the edges**: Always write at least one test for the golden path as a baseline contract against regressions. Then focus effort on boundary conditions, empty inputs, off-by-ones, and error paths, where bugs actually hide.
 - **Black-box inspection complements code analysis**: Static analysis catches type errors and logic bugs; only visual and behavioral inspection catches layout shifts, hover states, animation timing, focus order, and what the user actually sees. For any UI-touching change: run the dev server, exercise the change in a browser, verify the golden path AND adjacent features for regressions. Type checks pass ≠ feature works. If the environment is headless or the UI can't be rendered, say so explicitly rather than claiming success.
 
@@ -105,7 +105,7 @@ Debugging is hypothesis-driven, not stab-in-the-dark. Treat each bug as a scient
 ## Workflow Rules
 - **Apply this profile to all generated code**: Check compliance before presenting. Pick primitives that fit the task.
 - **Question the problem before solving**: For T3+ work, articulate the problem in your own words first and verify it's the problem worth solving. Surface "should we build this?" before "how should we build this?" Skip when the user has already framed the problem and the alternatives explicitly.
-- **Plan first**: Propose the approach and wait for approval before implementing T3+ work. T1 fixes proceed directly; T2 plans briefly and proceeds without approval. The sizing threshold lives in Task Triage.
+- **Plan first**: Propose the approach and wait for approval before implementing T3+ work. T1 fixes proceed directly; T2 plans briefly and proceeds without approval. Design tension surfaces before code is written, not in PR comments. The sizing threshold lives in Task Triage.
 - **Explain changes**: After making edits, briefly explain what changed and why
 - **Test proportional to risk**: Match verification effort to task tier.
   - T1: no automated test required unless the touched project has a cheap exact check.
@@ -143,7 +143,7 @@ A short list of things never to do. Negative rules earn their place by recurrenc
 - **Don't introduce abstractions on the first pass**: Default is wait for the second use; three similar lines beat premature abstraction. Exception: when the abstraction immediately improves clarity, matches an existing local pattern, or prevents likely misuse.
 - **Don't create files or directories without mentioning them first**: surfaces let the user redirect before commit.
 - **Don't suppress warnings or linter errors without justification**: warnings often flag real bugs.
-- **Don't add dependencies without discussing them first**: each addition is a long-term maintenance burden.
+- **Don't add dependencies without discussing them first**: each addition is a long-term maintenance burden. Surface license, maintenance health, transitive depth, and supply-chain audit before proposing.
 
 ## Task Triage
 Sizing a request before diving in saves more time than any other workflow primitive. A 5-minute fix needs a different process than a 5-day project; getting this wrong wastes effort in both directions.
@@ -198,11 +198,11 @@ Concrete examples of desired output shape. Not templates; show shape and density
 
 *Applies to web frontends and other graphical UIs.*
 
-- **Three button states**: Every clickable element needs base, hover (lighter/tinted), and press (darker) states. Both active and inactive variants.
+- **Three button states**: Every clickable element needs base, hover (lighter/tinted), and press (darker) states. Both active and inactive variants. Ideally enforced via component primitives that cannot be instantiated incomplete.
 - **Hover gating**: Wrap hover styles in `@media (hover: hover)` to prevent sticky hover on touch devices.
-- **Interactive color convention**: Hover mixes the base color ~15% toward a lighter/accent tint. Press mixes ~15% toward dark. Same transformation ratios for all interactive elements, applied relative to each element's own base color.
-- **Mobile-first verification**: Compute pixel budgets at 375px (iPhone SE), 390px (iPhone 14), 768px (iPad). iOS constraints: 16px font floor on inputs, 44px tap targets, no vendor prefixes.
-- **Color system**: Derive all tints and shades from base colors via `color-mix()`. No hardcoded hex outside `:root` token definitions. This preserves runtime flexibility for dark mode.
+- **Interactive color convention**: Hover mixes the base color ~15% toward a lighter/accent tint. Press mixes ~15% toward dark. Same transformation ratios for all interactive elements, applied relative to each element's own base color. Encoded in `color-mix()` mixins so the rule cannot drift per-component.
+- **Mobile-first verification**: Compute pixel budgets at 375px (iPhone SE), 390px (iPhone 14), 768px (iPad). iOS constraints: 16px font floor on inputs, 44px tap targets, no vendor prefixes. Enforced at build or in review, not by recall.
+- **Color system**: Derive all tints and shades from base colors via `color-mix()`. No hardcoded hex outside `:root` token definitions. This preserves runtime flexibility for dark mode. Enforced via lint or review.
 - **Motion has personality, not just function**: Beyond signaling state changes, motion is a tool for delight: subtle bounces on success, satisfying eases on panel transitions, brief celebrations on completion. UIs should feel alive, not robotic. The discipline is restraint, every animation earns its place, but the goal is motion that feels intentional and human, not sterile motion-free interfaces. The accessibility rule (`prefers-reduced-motion`) governs *who* sees the motion; this rule governs *what* motion is worth shipping at all.
 
 ## Accessibility Primitives
