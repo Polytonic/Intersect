@@ -33,7 +33,7 @@ Each tool is a primitive. See `primitives/tools.md` for affordances. The "primar
 
 ### Model and CLI freshness
 
-AI tooling moves fast: model names and capabilities shift on roughly a quarterly cadence. Before any high-stakes consultation, run `codex --version` / `gemini --version`, upgrade if a newer release is available (`brew upgrade codex gemini`), and confirm the CLI's current default model. Do not hardcode model names in workflows. When a successor Pro-tier model ships, revisit which provider is best for which task type and update memory accordingly.
+AI tooling moves fast: model names and capabilities shift on roughly a quarterly cadence. Before any high-stakes consultation, run `codex --version` / `gemini --version` and confirm the CLI's current default model. If a newer release is available, report the staleness and ask before upgrading (`brew upgrade codex gemini`); do not auto-upgrade. Do not hardcode model names in workflows. When a successor Pro-tier model ships, revisit which provider is best for which task type and update memory accordingly.
 
 ### Plan-tier routing
 

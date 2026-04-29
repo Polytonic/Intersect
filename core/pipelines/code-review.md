@@ -16,7 +16,7 @@ Override the gate when the change is small but high-stakes (auth changes, data m
 
 ## Persona selection
 
-The full persona roster lives in `primitives/personas.md`. Choose based on what the change touches; skip those that don't apply (e.g., Internationalization on a single-locale personal site, Product manager on internal tooling with a clear owner). Add task-specific personas when useful (e.g., a **migration auditor** for verification reviews, a **compatibility auditor** for public API changes). **Chaos Monkey QA** is always included when there is a user-facing surface.
+The full persona roster lives in `primitives/personas.md`. **Default cap:** at most 3 personas per phase for routine T3 reviews. Lift the cap for the same triggers that unlock the full pipeline (security-critical work, migrations, public APIs, large diffs >500 lines, or explicit deep review request). Choose based on what the change touches; skip those that don't apply (e.g., Internationalization on a single-locale personal site, Product manager on internal tooling with a clear owner). Add task-specific personas when useful (e.g., a **migration auditor** for verification reviews, a **compatibility auditor** for public API changes). **Chaos Monkey QA** is always included when there is a user-facing surface.
 
 ## Phase 1: Individual review
 
@@ -36,7 +36,7 @@ After Phase 3, consolidate all findings into a single summary categorized as **F
 
 ## Iteration
 
-Apply fixes from consensus findings, then repeat Phases 1-3. A round terminates when every participant reports "no new findings" unprompted. Run one additional confirmation round after that. Explicitly confirm exhaustion rather than stopping after one round. If a persona has zero findings across two consecutive rounds, drop it from subsequent rounds.
+Apply fixes from consensus findings, then repeat Phases 1-3. **Default cap:** two iteration rounds. After two rounds, ask the user before running another. A round terminates when every participant reports "no new findings" unprompted. If a persona has zero findings across two consecutive rounds, drop it from subsequent rounds.
 
 ## Execution notes
 

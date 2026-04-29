@@ -11,7 +11,8 @@ The personas (`primitives/personas.md`) are not just for formal code review. The
 
 ## Execution
 
-- Spawn personas in parallel when independent. See `primitives/tools.md` for tool-specific dispatch mechanisms.
+- **Default:** apply the relevant persona's perspective locally as a review lens. State which persona's lens is being applied.
+- **External dispatch:** spawn the persona as a separate agent only for high-value T3+ work or when the user authorizes it. Spawn personas in parallel when independent. See `primitives/tools.md` for tool-specific dispatch mechanisms.
 
 ## Synthesis
 
