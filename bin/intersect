@@ -69,8 +69,9 @@ symlinks they own; real files are left alone.
 EOF
 }
 
-# resolve_targets normalises the tool list, expanding "all" and validating names.
-# Echoes the resolved tools, one per line.
+# resolve_targets should expand "all" to the full tool list, validate the
+# names, and emit one tool per line. Unknown names exit with an error so
+# callers do not silently skip typos.
 resolve_targets() {
   local args=("$@")
   if [[ ${#args[@]} -eq 0 ]]; then
@@ -116,10 +117,14 @@ cmd_install() {
   local cli_dest="$target_dir/intersect"
   local cli_source="$REPO_DIR/bin/intersect"
 
-  # Ensure the target dir exists. Use sudo only when the parent isn't writable.
+  # Ensure the target dir exists. Test the parent's writability explicitly so
+  # real errors (no space, read-only mount) surface instead of being swallowed
+  # and silently escalated to a sudo prompt.
   if [[ ! -d "$target_dir" ]]; then
-    if mkdir -p "$target_dir" 2>/dev/null; then
-      :
+    local parent
+    parent="$(dirname "$target_dir")"
+    if [[ -w "$parent" ]]; then
+      mkdir -p "$target_dir"
     else
       echo "Creating $target_dir requires sudo."
       sudo mkdir -p "$target_dir"
@@ -132,16 +137,24 @@ cmd_install() {
     return 0
   fi
 
-  # Back up any pre-existing entry at the destination.
+  # Back up any pre-existing entry at the destination. Same-second collision
+  # check guards against re-running within one second so a previous backup is
+  # not silently overwritten.
   if [[ -e "$cli_dest" || -L "$cli_dest" ]]; then
     local backup="$cli_dest.before-intersect.$(date +%Y%m%d-%H%M%S)"
+    if [[ -e "$backup" || -L "$backup" ]]; then
+      echo "${C_FAIL}ERROR${C_RESET}: backup target already exists: $backup" >&2
+      echo "Wait one second and try again so the timestamp rotates." >&2
+      exit 1
+    fi
     sudo_if_needed "$target_dir" mv "$cli_dest" "$backup"
     echo "${C_DIM}backed up existing entry to $backup${C_RESET}"
   fi
 
   # Atomic Symlink Swap
-  # Create the link under a temp name then mv-rename so the destination
-  # is never empty even if interrupted between steps.
+  # Create the link under a temp name then mv-rename. The mv is atomic on the
+  # same filesystem; if a pre-existing file was backed up above, the
+  # destination is briefly empty between the backup-mv and this swap.
   local tmp="$cli_dest.intersect.$$"
   sudo_if_needed "$target_dir" ln -s "$cli_source" "$tmp"
   sudo_if_needed "$target_dir" mv -f "$tmp" "$cli_dest"
@@ -295,28 +308,23 @@ cmd_update() {
 
 # === doctor ===
 
-cmd_doctor() {
-  local issues=0
-
+doctor_check_repo() {
   echo "${C_DIM}== Repo ==${C_RESET}"
   echo "  $REPO_DIR"
   if [[ ! -d "$REPO_DIR/.git" ]]; then
     echo "  ${C_WARN}⚠${C_RESET}  not a git repository"
-    issues=$((issues + 1))
+    DOCTOR_ISSUES=$((DOCTOR_ISSUES + 1))
   fi
+}
 
-  echo ""
+doctor_check_repo_files() {
   echo "${C_DIM}== Repo Files ==${C_RESET}"
-  local repo_files=(
-    "core/agents.md"
-    "core/claude.md"
-    "core/primitives/personas.md"
-    "core/primitives/tools.md"
-    "core/pipelines/code-review.md"
-    "core/pipelines/expert-consultation.md"
-    "core/pipelines/competitive-implementation.md"
-    "core/pipelines/cross-model-consultation.md"
-    "core/pipelines/regression-test.md"
+  # Markdown content under core/ is enumerated dynamically so adding a new
+  # primitive or pipeline does not require editing this list. Tool config
+  # files are still hand-maintained because they are few and slow-changing.
+  local repo_files
+  mapfile -t repo_files < <(cd "$REPO_DIR" && find core -name '*.md' -type f | sort)
+  repo_files+=(
     "tools/claude/settings.json"
     "tools/codex/config.toml"
     "tools/gemini/settings.json"
@@ -326,11 +334,12 @@ cmd_doctor() {
       echo "  ${C_OK}✓${C_RESET} $f"
     else
       echo "  ${C_FAIL}✗${C_RESET} missing: $f"
-      issues=$((issues + 1))
+      DOCTOR_ISSUES=$((DOCTOR_ISSUES + 1))
     fi
   done
+}
 
-  echo ""
+doctor_check_cli_install() {
   echo "${C_DIM}== CLI Install ==${C_RESET}"
   local cli_source="$REPO_DIR/bin/intersect"
   local found_install=""
@@ -350,8 +359,9 @@ cmd_doctor() {
       echo "  ${C_WARN}⚠${C_RESET}  intersect not on PATH (run: intersect install)"
     fi
   fi
+}
 
-  echo ""
+doctor_check_tools() {
   echo "${C_DIM}== Tool Availability ==${C_RESET}"
   for tool in "${TOOLS[@]}"; do
     if command -v "$tool" >/dev/null 2>&1; then
@@ -362,8 +372,9 @@ cmd_doctor() {
       echo "  ${C_WARN}⚠${C_RESET}  $tool not on PATH"
     fi
   done
+}
 
-  echo ""
+doctor_check_links() {
   echo "${C_DIM}== Link Symlinks ==${C_RESET}"
   for spec in "${LINKS[@]}"; do
     local rest="${spec#*|}"
@@ -375,13 +386,13 @@ cmd_doctor() {
 
     if [[ ! -e "$dest" && ! -L "$dest" ]]; then
       echo "  ${C_WARN}⚠${C_RESET}  $short_dest: not linked (run: intersect link)"
-      issues=$((issues + 1))
+      DOCTOR_ISSUES=$((DOCTOR_ISSUES + 1))
       continue
     fi
 
     if [[ ! -L "$dest" ]]; then
-      echo "  ${C_FAIL}✗${C_RESET} $short_dest: exists but is not a symlink"
-      issues=$((issues + 1))
+      echo "  ${C_FAIL}✗${C_RESET} $short_dest: exists but is not a symlink (run: mv $short_dest $short_dest.bak && intersect link)"
+      DOCTOR_ISSUES=$((DOCTOR_ISSUES + 1))
       continue
     fi
 
@@ -390,17 +401,29 @@ cmd_doctor() {
     if [[ "$actual" == "$source" ]]; then
       echo "  ${C_OK}✓${C_RESET} $short_dest → $source_rel"
     else
-      echo "  ${C_FAIL}✗${C_RESET} $short_dest → $actual (expected → $source)"
-      issues=$((issues + 1))
+      echo "  ${C_FAIL}✗${C_RESET} $short_dest → $actual (expected → $source; run: rm $short_dest && intersect link)"
+      DOCTOR_ISSUES=$((DOCTOR_ISSUES + 1))
     fi
   done
+}
 
+cmd_doctor() {
+  DOCTOR_ISSUES=0
+  doctor_check_repo
   echo ""
-  if [[ $issues -eq 0 ]]; then
+  doctor_check_repo_files
+  echo ""
+  doctor_check_cli_install
+  echo ""
+  doctor_check_tools
+  echo ""
+  doctor_check_links
+  echo ""
+  if [[ $DOCTOR_ISSUES -eq 0 ]]; then
     echo "${C_OK}All systems go.${C_RESET}"
     return 0
   else
-    echo "${C_FAIL}$issues issue(s) found.${C_RESET}"
+    echo "${C_FAIL}$DOCTOR_ISSUES issue(s) found.${C_RESET}"
     return 1
   fi
 }

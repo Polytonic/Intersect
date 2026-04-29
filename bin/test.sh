@@ -33,32 +33,33 @@ fresh_home() {
   mkdir -p "$TEST_HOME"
 }
 
+# assert_symlink should pass when $dest is a symlink whose target equals
+# $expected, and fail with a diff-style message otherwise.
+assert_symlink() {
+  local dest="$1" expected="$2" msg="$3"
+  local actual
+  actual="$(readlink "$dest")"
+  if [[ "$actual" == "$expected" ]]; then
+    pass "$msg"
+  else
+    fail "$msg" "expected $expected, got $actual"
+  fi
+}
+
 # === Tests ===
 
 test_link_creates_expected_symlinks() {
   fresh_home
   HOME="$TEST_HOME" "$INTERSECT" link >/dev/null
-  local actual expected
-  actual="$(readlink "$TEST_HOME/.claude/CLAUDE.md")"
-  expected="$REPO_DIR/core/claude.md"
-  if [[ "$actual" == "$expected" ]]; then
-    pass "link creates ~/.claude/CLAUDE.md → core/claude.md"
-  else
-    fail "link target" "expected $expected, got $actual"
-  fi
+  assert_symlink "$TEST_HOME/.claude/CLAUDE.md" "$REPO_DIR/core/claude.md" \
+    "link creates ~/.claude/CLAUDE.md → core/claude.md"
 }
 
 test_link_creates_settings_symlinks() {
   fresh_home
   HOME="$TEST_HOME" "$INTERSECT" link >/dev/null
-  local actual expected
-  actual="$(readlink "$TEST_HOME/.codex/config.toml")"
-  expected="$REPO_DIR/tools/codex/config.toml"
-  if [[ "$actual" == "$expected" ]]; then
-    pass "link creates ~/.codex/config.toml → tools/codex/config.toml"
-  else
-    fail "settings target" "expected $expected, got $actual"
-  fi
+  assert_symlink "$TEST_HOME/.codex/config.toml" "$REPO_DIR/tools/codex/config.toml" \
+    "link creates ~/.codex/config.toml → tools/codex/config.toml"
 }
 
 test_link_is_idempotent() {
@@ -111,9 +112,8 @@ test_unlink_removes_only_our_symlinks() {
 }
 
 test_install_through_symlink_resolves_repo_dir() {
-  # This test catches the REPO_DIR-via-symlink bug we hit when installing the
-  # CLI to /opt/homebrew/bin: the script was using the symlink's parent dir
-  # instead of resolving through the symlink to the actual repo.
+  # When invoked through a PATH symlink, intersect should resolve REPO_DIR by
+  # following the symlink to the real repo, not by using the symlink's parent.
   fresh_home
   HOME="$TEST_HOME" "$INTERSECT" install "$TEST_HOME/bin" >/dev/null
   HOME="$TEST_HOME" "$INTERSECT" link >/dev/null
@@ -152,6 +152,40 @@ test_uninstall_refuses_to_remove_foreign_symlinks() {
   fi
 }
 
+test_update_errors_when_repo_is_not_git() {
+  # update should fail with a clear message when REPO_DIR has no .git/.
+  fresh_home
+  local fake_repo="$TEST_HOME/fake_repo"
+  mkdir -p "$fake_repo/bin"
+  cp "$INTERSECT" "$fake_repo/bin/intersect"
+  local output
+  output="$(HOME="$TEST_HOME" "$fake_repo/bin/intersect" update 2>&1 || true)"
+  if echo "$output" | grep -q "not a git repository"; then
+    pass "update errors when REPO_DIR is not a git repo"
+  else
+    fail "update error path" "expected 'not a git repository', got: $output"
+  fi
+}
+
+test_update_invokes_pull_in_git_repo() {
+  # update should announce the pull (by printing the Pulling message) once
+  # REPO_DIR is a real git repo. The pull itself may fail on a fresh init
+  # without a remote; that exits non-zero, but the announce should still
+  # have happened first.
+  fresh_home
+  local fake_repo="$TEST_HOME/fake_repo"
+  mkdir -p "$fake_repo/bin"
+  cp "$INTERSECT" "$fake_repo/bin/intersect"
+  git init -q "$fake_repo"
+  local output
+  output="$(HOME="$TEST_HOME" "$fake_repo/bin/intersect" update 2>&1 || true)"
+  if echo "$output" | grep -q "Pulling"; then
+    pass "update announces the pull when REPO_DIR is a git repo"
+  else
+    fail "update happy path" "expected 'Pulling' message, got: $output"
+  fi
+}
+
 test_unknown_command_errors_cleanly() {
   local output
   output="$("$INTERSECT" frobnicate 2>&1 || true)"
@@ -184,6 +218,8 @@ test_unlink_removes_only_our_symlinks
 test_install_through_symlink_resolves_repo_dir
 test_install_is_idempotent
 test_uninstall_refuses_to_remove_foreign_symlinks
+test_update_errors_when_repo_is_not_git
+test_update_invokes_pull_in_git_repo
 test_unknown_command_errors_cleanly
 test_unknown_tool_errors_cleanly
 

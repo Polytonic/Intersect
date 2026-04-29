@@ -1,6 +1,6 @@
 # Personas
 
-Reviewer/expert primitives used by pipelines. The Code Review pipeline (`pipelines/code-review.md`) draws Phase-1 reviewers, Phase-2 critics, and Phase-3 cross-reviewers from this roster. The Expert Consultation pipeline (`pipelines/expert-consultation.md`) dispatches single specialists for domain questions. The Competitive Implementation pipeline (`pipelines/competitive-implementation.md`) uses senior personas as evaluators. Not every pipeline run needs every persona; select based on what the work touches.
+Reviewer/expert primitives used by pipelines. Pipelines that need reviewer or expert input draw from this roster; see `pipelines/` for which pipelines invoke which personas. Not every pipeline run needs every persona; select based on what the work touches.
 
 **Project-local "Key contributions":** When a persona earns concrete wins on a specific project, capture them in that project's local CLAUDE.md, AGENTS.md, or GEMINI.md, not here. Format: a short bullet noting what was caught and why it mattered. The global roster stays portable; project-local files carry the receipts and the war stories.
 

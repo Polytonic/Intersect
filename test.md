@@ -1,6 +1,8 @@
-# AI Verification
+# AI Tool Verification
 
-End-to-end verification that the AI tools load the symlinked configs correctly. Run each command in a fresh session and check the output matches the expected value. Close paraphrase is fine, these are model responses, not strict assertions. Skip rows for CLIs you don't use.
+See readme.md § For AI agents working in this repo for the directive that pairs with this verification table.
+
+End-to-end verification that the AI tools load the symlinked configs correctly. Run each command in a fresh session and check the output matches the expected value. Close paraphrase is fine. These are model responses, not strict assertions. Skip rows for CLIs you don't use.
 
 ## Commands
 
@@ -12,5 +14,3 @@ End-to-end verification that the AI tools load the symlinked configs correctly. 
 | Codex | `codex exec "First H1 in ~/.codex/AGENTS.md, no preamble"` | `# Developer Profile` |
 | Codex | `codex exec "First persona under Core roster in ~/.codex/AGENTS.md"` | `Principal engineer` |
 | Gemini | `gemini -p "H1 of ~/.gemini/GEMINI.md"` | `# Developer Profile` |
-
-See readme.md § For AI agents working in this repo for the directive that pairs with this verification table.

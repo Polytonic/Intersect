@@ -37,7 +37,8 @@ core/                                # universal markdown content
     ├── code-review.md               # multi-phase persona review
     ├── expert-consultation.md       # single specialist dispatch
     ├── competitive-implementation.md  # divergent then converge ("red/blue")
-    └── cross-model-consultation.md  # Codex/Gemini second opinion
+    ├── cross-model-consultation.md  # Codex/Gemini second opinion
+    └── regression-test.md           # automated checks after code-modifying changes
 
 tools/                               # per-CLI machine config
 ├── claude/settings.json
