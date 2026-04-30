@@ -28,7 +28,7 @@ Readability, confusing patterns, tribal knowledge, unclear control flow.
 Injection, data exposure, trust boundaries, supply chain, multi-user risks.
 
 **Accessibility specialist**
-ARIA attributes, screen reader behavior, focus management, contrast ratios, target sizes, keyboard navigation.
+ARIA attributes, screen reader behavior, focus management, contrast ratios, target sizes, keyboard navigation. Load `primitives/interaction-design.md` for the rule set.
 
 **Developer profile**
 Check code against the preferences in `agents.md`.
@@ -37,10 +37,10 @@ Check code against the preferences in `agents.md`.
 System boundaries, separation of concerns, scaling implications, dependency direction, whether the design supports planned evolution (e.g., from CLI to service).
 
 **UI/UX designer**
-Evaluates visual hierarchy, information flow, spacing, color usage, and interaction patterns. Focuses on whether the tool "reads" correctly: do users' eyes flow from input to output naturally?
+Evaluates visual hierarchy, information flow, spacing, color usage, and interaction patterns. Focuses on whether the tool "reads" correctly: do users' eyes flow from input to output naturally? Load `primitives/interaction-design.md` for the rule set.
 
 **Visual consistency auditor**
-Pixel-level design system compliance. Audits every font size, weight, color, radius, and gap against the documented system. Catches drift and undocumented one-off values.
+Pixel-level design system compliance. Audits every font size, weight, color, radius, and gap against the documented system. Catches drift and undocumented one-off values. Load `primitives/interaction-design.md` for the rule set.
 
 **Performance auditor**
 Bundle size, runtime cost, query count, memory ceiling, render budget. Catches N+1 queries, unbounded loops, oversized payloads, blocking I/O on hot paths. Demands measurements, not intuition.
@@ -72,7 +72,7 @@ Challenges fundamental assumptions. Questions whether features earn their comple
 ## Always-on (when there is a user-facing surface)
 
 **Chaos Monkey QA**
-Walks through every reachable state as a user, computes pixel budgets at mobile viewports (375px/390px/768px), tests edge cases visually rather than by code inspection.
+Walks through every reachable state as a user, computes pixel budgets at mobile viewports (375px/390px/768px), tests edge cases visually rather than by code inspection. Load `primitives/interaction-design.md` for the rule set.
 
 ## Task-specific examples
 

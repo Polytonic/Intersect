@@ -194,33 +194,6 @@ Concrete examples of desired output shape. Not templates; show shape and density
 - **Conciseness**: Keep `raise`/`throw` statements on a single line when the message fits. Inline single-use variables when the expression is clear enough on its own. Prefer async/await over callback chains (`.then()` in JS, raw coroutine wiring in Python) in any language that supports it
 - **DOM minimalism** (web frontends): Every DOM element must justify its existence. Prefer CSS solutions (pseudo-elements, grid, adjacent-sibling selectors) over wrapper elements for decorative or layout-only concerns. Audit wrapper divs before shipping: if it's not a positioning context, flex/grid container, semantic grouping, or conditional layout boundary, remove it. Use data-driven rendering (.map over config) instead of repeated near-identical markup
 
-## Interaction Design
-
-*Applies to web frontends and other graphical UIs.*
-
-- **Three button states**: Every clickable element needs base, hover (lighter/tinted), and press (darker) states. Both active and inactive variants. Ideally enforced via component primitives that cannot be instantiated incomplete.
-- **Hover gating**: Wrap hover styles in `@media (hover: hover)` to prevent sticky hover on touch devices.
-- **Interactive color convention**: Hover mixes the base color ~15% toward a lighter/accent tint. Press mixes ~15% toward dark. Same transformation ratios for all interactive elements, applied relative to each element's own base color. Encoded in `color-mix()` mixins so the rule cannot drift per-component.
-- **Mobile-first verification**: Compute pixel budgets at 375px (iPhone SE), 390px (iPhone 14), 768px (iPad). iOS constraints: 16px font floor on inputs, 44px tap targets, no vendor prefixes. Enforced at build or in review, not by recall.
-- **Color system**: Derive all tints and shades from base colors via `color-mix()`. No hardcoded hex outside `:root` token definitions. This preserves runtime flexibility for dark mode. Enforced via lint or review.
-- **Motion has personality, not just function**: Beyond signaling state changes, motion is a tool for delight: subtle bounces on success, satisfying eases on panel transitions, brief celebrations on completion. UIs should feel alive, not robotic. The discipline is restraint, every animation earns its place, but the goal is motion that feels intentional and human, not sterile motion-free interfaces. The accessibility rule (`prefers-reduced-motion`) governs *who* sees the motion; this rule governs *what* motion is worth shipping at all.
-
-## Accessibility Primitives
-
-*Applies to web frontends and other graphical UIs.*
-
-Accessibility is correctness for users you may not have tested with. Build it in from the start; retrofitting is expensive and usually incomplete.
-
-- **Semantic HTML first**: Use `<button>` for buttons, `<a href>` for navigation, `<nav>`/`<main>`/`<header>` for landmarks. ARIA is a patch for when semantic HTML cannot express the intent, not a replacement.
-- **Keyboard navigation works for everything**: Every interactive element is reachable and operable via keyboard alone. Tab order follows visual order. Escape closes modals. Enter activates. Arrow keys navigate inside composite widgets.
-- **Visible focus indicator on every focusable element**: Never `outline: none` without an explicit replacement. Focus rings must meet 3:1 contrast against the adjacent background.
-- **Focus management on dynamic UI**: When opening a modal, move focus inside. When closing, return it to the trigger. When inserting content the user just requested, move focus to it. Focus is the keyboard user's cursor.
-- **Color contrast ratios**: WCAG AA: 4.5:1 for body text, 3:1 for large text (18pt+, or 14pt+ bold) and UI components. Don't ship below this. Verify with a contrast checker, not by eye.
-- **Color is never the only signal**: State changes use shape, icon, or text in addition to color. Red-green colorblindness affects ~8% of men.
-- **Form labels are programmatically associated**: Every input has a `<label for="">` or `aria-labelledby`. Errors associate with their field via `aria-describedby` and use `role="alert"` for live announcement.
-- **Motion is a legitimate design tool, but you must honor `prefers-reduced-motion`**: The OS exposes the user's preference as a CSS media query / JS signal; the browser does not auto-disable web animations. Wrap non-essential animations in `@media (prefers-reduced-motion: no-preference)` (or gate via `window.matchMedia('(prefers-reduced-motion: reduce)').matches`) so users who've opted out don't see them. The browser doesn't enforce the preference; you do. Pairs with the Interaction Design rule on motion's role.
-- **Test with the keyboard, then with a screen reader**: Tab through the page with no mouse. Then run VoiceOver (Cmd+F5 on macOS) and listen. Issues invisible to the eye become obvious in audio.
-
 ## Copy Style
 - **Tight copy**: Question every word. If context already provides meaning, remove redundant words.
 - **Domain accuracy**: Use terminology the target audience uses. Consult domain experts when the project has them. Avoid engineering jargon in user-facing text.
@@ -283,6 +256,7 @@ Composable building blocks used by pipelines:
 
 - **Personas** (`primitives/personas.md`): reviewer/expert personas. The roster a code-review or expert-consultation pipeline draws from.
 - **Tools** (`primitives/tools.md`): Claude Code, Codex CLI, Gemini CLI as primitives. Affordances and dispatch criteria for each.
+- **Interaction design** (`primitives/interaction-design.md`): UI behavior, accessibility, visual interaction. Read when touching `.tsx`/`.jsx`/`.css`/`.html`/`.svelte`/`.vue`, when the repo has a UI framework in `package.json`, or when the prompt is about UI, design, accessibility, animation, or interaction.
 
 ## Pipelines
 
