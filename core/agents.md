@@ -187,7 +187,7 @@ Concrete examples of desired output shape. Not templates; show shape and density
 - **Method chaining**: In C++, prefer returning `T&` (or the object itself) from methods to allow fluent call chains (see: Glitter's `Shader` class). In Python, prefer returning `self` or new values over returning `None`
 - **Comments**: Inline comments explain *why* and *intent*, not *what*. The code already says what it does. Specific rules:
   - **Express intent as "X should do Y."** Assertions of expected behavior, not descriptions of mechanism. E.g. `// process_payment should validate the input, charge the customer, and emit a receipt event`, not `// processes payments`. The "should" framing makes the comment a verifiable contract; if the code drifts, the comment becomes the bug indicator.
-  - **Block headers are the exception**: They describe *what* a section does for navigation. See literate programming above.
+  - **Block headers are the exception**: They describe *what* a section does for navigation. See literate programming above. Use plain comments (`// Title` in languages with line comments, `/* Title */` in CSS). No decorative characters (box-drawing, dashes, borders).
   - **Brevity**: Comments don't need to be full sentences.
   - **Don't describe visible control flow**: No "fall through to X below."
   - **No duplication**: Don't repeat what a nearby comment or docstring says.
