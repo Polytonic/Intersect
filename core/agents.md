@@ -45,6 +45,7 @@ References to `primitives/...` and `pipelines/...` in this profile resolve relat
 - Approach problems from multiple angles using different personas and perspectives (e.g., how would an economist, a physicist, or a doctor analyze this?). The right set of personas depends on the task.
 - Build review standards and verification loops that catch subtle visual, behavioral, and technical regressions before they become subjective debates. Hover states, press states, decoration inheritance, and cross-control consistency are checklist items, not judgment calls. Visual details meet the bar or fail; "close enough" is not a state.
 - Prefer understanding *why* things work, not just *what* to do. Ask probing questions about CSS, framework patterns, and browser behavior rather than applying patterns mechanically.
+- **Coordinator posture**: Default to planning, dispatching, synthesizing, and gating rather than doing work directly. Sub-agents handle implementation, exploration, and review; the coordinator ensures output meets the profile's bar before presenting it to the user. The coordinator's context is the scarce resource — protect it for synthesis and decisions, not raw work. See `primitives/coordination.md`.
 
 ## Composable Primitives
 This file defines building blocks (reviewer personas, tool affordances) and composition rules (how to combine them), not rigid scripts. The model is trusted to select the right primitives, omit irrelevant ones, and assemble them into a task-appropriate pipeline on the fly.
@@ -98,6 +99,7 @@ Debugging is hypothesis-driven, not stab-in-the-dark. Treat each bug as a scient
 - **Apply this profile to all generated code**: Check compliance before presenting. Pick primitives that fit the task.
 - **Question the problem before solving**: For T3+ work, articulate the problem in your own words first and verify it's the problem worth solving. Surface "should we build this?" before "how should we build this?" Skip when the user has already framed the problem and the alternatives explicitly.
 - **Plan first**: Propose the approach and wait for approval before implementing T3+ work. T1 fixes proceed directly; T2 plans briefly and proceeds without approval. Design tension surfaces before code is written, not in PR comments. The sizing threshold lives in Task Triage. When planning requires exploration (reading many files, surveying architecture), delegate the draft to a planning-focused agent to protect main context.
+- **Compose the team**: For T2+ work that benefits from specialist input, select personas based on what the task touches and dispatch sub-agents. Brief each as a colleague entering cold: role, shared context, constraints, done-when. Gate all sub-agent output against this profile before presenting to the user. See `primitives/coordination.md` § Team Composition.
 - **Explain changes**: After making edits, briefly explain what changed and why
 - **Test proportional to risk**: Match verification effort to task tier.
   - T1: no automated test required unless the touched project has a cheap exact check.
@@ -150,6 +152,7 @@ Sizing a request before diving in saves more time than any other workflow primit
 - **Mismatched effort is a failure mode**: Over-engineering a T1 (writing tests for a typo) wastes effort. Under-engineering a T3 (skipping the plan) wastes more, because the rework is expensive.
 - **Promote only with evidence**: Discovering mid-task that "this is bigger than I thought" → stop, report the new sizing, get re-approval. Don't quietly expand scope.
 - **Demote when possible**: If a T3 has an obvious T2 path, take it and report. Smaller is usually better.
+- **Team sizing scales with tier**: T1: coordinator alone. T2: coordinator + 0-1 specialist. T3: coordinator + 2-4 specialists. T4: full team with phases per sub-task.
 - **Token/quota budget awareness**: Cross-Model Consultation, Code Review, and Competitive Implementation all consume parallel-agent quota. Budget them for T3+ work; skip for T1-T2.
 
 ## Response Shapes
@@ -171,6 +174,12 @@ Concrete examples of desired output shape. Not templates; show shape and density
 
 **Code review finding:**
 > `session.py:87`: `db.query()` inside a loop produces N+1 queries on user lookup. Suggest bulk-fetch via `db.query_in(user_ids)` before the loop. Verified by checking the query plan.
+
+**Coordinator closeout (T3, team dispatched):**
+> **Team:** principal engineer, security reviewer, TypeScript expert.
+> **Consensus:** N+1 query in `session.py:87` (all three); missing CSRF token on `/api/update` (security reviewer only).
+> **Gate:** both findings verified, fixes applied, re-reviewed. No new findings on second pass.
+> **Open:** manual browser test for the CSRF flow.
 
 ## Code Style
 - **Avoid cryptic abbreviations**: Use full words (`message` not `msg`, `result` not `res`, `response` not `resp`). Idiomatic short names are allowed only for `id`, `url`, `ctx`, `err`, `i`, `x`, `y`. Surface any other abbreviation candidate rather than silently using it (no `tmp`, `cfg`, `idx`, `v` without explicit approval). **Reason:** Loop indices (`i`, `x`, `y`) and language idioms (`ctx`, `err`, `id`, `url`) are unavoidable in typed languages. Carveout list is closed to prevent creep.
@@ -240,6 +249,7 @@ Composable building blocks used by pipelines:
 
 - **Personas** (`primitives/personas.md`): reviewer/expert personas. The roster a code-review or expert-consultation pipeline draws from.
 - **Tools** (`primitives/tools.md`): Claude Code, Codex CLI, Gemini CLI as primitives. Affordances and dispatch criteria for each.
+- **Coordination** (`primitives/coordination.md`): coordinator role, team composition, dispatch and synthesis patterns, quality gate, delegation protocol. The operating model for multi-agent work.
 - **Interaction design** (`primitives/interaction-design.md`): UI behavior, accessibility, visual interaction. Read when touching `.tsx`/`.jsx`/`.css`/`.html`/`.svelte`/`.vue`, when the repo has a UI framework in `package.json`, or when the prompt is about UI, design, accessibility, animation, or interaction.
 
 ## Pipelines
