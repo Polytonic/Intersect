@@ -89,18 +89,13 @@ This file defines building blocks (reviewer personas, tool affordances) and comp
 ## Debugging Methodology
 Debugging is hypothesis-driven, not stab-in-the-dark. Treat each bug as a scientific investigation: form a hypothesis, design a test, run it, observe, update the model. Repeat until the model matches reality.
 
-- **Reproduce first**: A bug you can't reproduce can't be fixed reliably. Build the smallest repro that still triggers the failure before attempting any fix. If intermittent, find the trigger before guessing.
-- **Suspect yourself first**: The base rate of "you wrote a bug" vastly exceeds "the standard library has a bug." Start there.
 - **Symptoms are not causes**: The first thing that fails is rarely the actual bug. A null pointer crash is a symptom; the cause is whatever invariant got violated three layers up. Trace to root.
 - **Instrument before changing**: Don't apply a fix until you've directly observed the broken state. Logs, prints, breakpoints, debugger inspection. If you can't see the bug happening, you can't be sure your fix addresses it.
 - **State hypotheses explicitly**: "I think X because Y, so if I change Z I expect W." Predicting the result forces calibration. A surprising result means the model is wrong, and that is a finding, not a setback.
-- **Binary search aggressively**: Time (`git bisect`), space (which subsystem, file, function), and input (which fragment of the data triggers it). Halving the search space converges fast.
-- **One variable at a time**: Combined changes mask which one mattered.
-- **Five whys, not one**: Stop only at root cause, not proximate cause. Patching proximate causes leaves landmines.
-- **Write the regression test**: When you find the bug, write the test that would have caught it *before* fixing. Proves the understanding and prevents recurrence.
 - **Stuck more than 30 minutes? Escalate**: Rubber-duck explicitly, spawn a debugging-focused agent, or invoke Cross-Model Consultation. Repeating what you've already tried has low yield.
 
 ## Workflow Rules
+- **Session start**: Check for `HANDOFF.md` in the current working directory; if found, read it before proceeding.
 - **Apply this profile to all generated code**: Check compliance before presenting. Pick primitives that fit the task.
 - **Question the problem before solving**: For T3+ work, articulate the problem in your own words first and verify it's the problem worth solving. Surface "should we build this?" before "how should we build this?" Skip when the user has already framed the problem and the alternatives explicitly.
 - **Plan first**: Propose the approach and wait for approval before implementing T3+ work. T1 fixes proceed directly; T2 plans briefly and proceeds without approval. Design tension surfaces before code is written, not in PR comments. The sizing threshold lives in Task Triage.
