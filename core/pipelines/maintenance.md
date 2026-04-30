@@ -19,7 +19,7 @@ Review the session history for the trigger events listed in `agents.md § Mainte
 - **Evidence**: quote or summarize the relevant exchange
 - **Proposed action**: exact memory write (with frontmatter) or agents.md diff
 
-Collect all candidates before presenting — surface them at once, not one at a time. For long sessions (context visibly summarized or >50 exchanges), delegate the scan to a subagent to keep main context clean for the synthesis and presentation steps.
+Collect all candidates before presenting — surface them at once, not one at a time. For long sessions (context visibly summarized or >50 exchanges), delegate the scan to a sub-agent to keep main context clean for the synthesis and presentation steps.
 
 ## Step 2: Present Candidates
 
@@ -33,10 +33,9 @@ Ask for approval, skip, or edit on each. For memory writes, check `MEMORY.md` fo
 
 ## Step 3: Write Approved Items
 
-**Memory** (Claude only):
-- Write to `memory/<filename>.md` with correct frontmatter (name, description, type)
-- Add or update the pointer in `MEMORY.md`
-- Types: `user`, `feedback`, `project`, `reference`
+**Memory** (tool-specific; see `primitives/tools.md` for each tool's memory mechanism):
+- Write to the active tool's memory store with appropriate metadata
+- Check for existing entries to update before creating new ones
 
 **agents.md changes**:
 - Apply the exact approved diff

@@ -26,7 +26,7 @@ Each AI coding CLI is a primitive that pipelines can dispatch work to. They diff
   - `codex` (interactive) or `codex exec "<prompt>"` (non-interactive).
   - `codex review` subcommand for built-in reviews.
   - Project-level + global AGENTS.md scope layering. **No `@import` syntax**. The model reads referenced files on demand.
-  - Available models depend on account tier (inspect `~/.codex/models_cache.json`).
+  - Available models depend on account tier (`codex debug models` for the live catalog).
   - Configurable reasoning effort via `model_reasoning_effort` in `~/.codex/config.toml`.
 - **Memory**: Persistent memory at `~/.codex/memories/`. Stores task-scoped rollout summaries, user preferences, and reusable knowledge.
 - **When to dispatch**: Cross-model consultation, second opinion on architecture decisions. Primary CLI in environments where Claude Code is unavailable (e.g., work-mandated tooling). When running there, treat Codex as the home base; the pipelines and personas apply identically.

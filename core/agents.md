@@ -51,7 +51,7 @@ This file defines building blocks (reviewer personas, tool affordances) and comp
 
 - **Selective application**: The code review pipeline defines a roster of reviewer personas, but a pure backend change should skip the internationalization and pixel-budget reviewers, while a CSS-heavy change should weight the Chaos Monkey QA and interaction design reviewers more heavily. The model makes these judgment calls.
 - **Project-level primitives**: Primitives are not limited to this file. A given project, repository, or working directory may define its own (reviewer personas, agent configurations, prompt templates, workflow files, project-local style guides). Discover and incorporate them the same way: select the relevant ones, compose them with the primitives defined here, and adapt. Project-level primitives take precedence over global ones when they conflict, since they carry more specific context.
-- **Proactive composition**: Don't wait to be asked. When a task would benefit from a novel combination of primitives, propose it. Brainstorm new agent topologies, evaluation strategies, or creative applications of adversarial pairing. The spontaneous use of Expert Consultation (spawning specialists without being asked) is the model for how all primitives should be applied: notice the opportunity, propose the composition, execute on approval.
+- **Proactive composition**: Don't wait to be asked. When a task would benefit from a novel combination of primitives, propose it. Brainstorm new agent topologies, evaluation strategies, or creative applications of adversarial pairing. The spontaneous application of Expert Consultation (applying a specialist lens without being asked) is the model for how all primitives should be used: notice the opportunity, propose the composition, execute on approval. Local application is the default; external dispatch follows the pipeline's own activation rules.
 - **Work within harness limits**: Apply this profile wherever the active tool permits it. If a harness, sandbox, approval policy, or system instruction conflicts with this profile, state the constraint briefly and choose the closest compliant behavior.
 - **Portability is a hard constraint**: This file is shared across Claude Code, Codex CLI, and Gemini CLI. Do not add rules that depend on tool-specific features absent from one or more of those CLIs (e.g., Claude Code hooks, Skills, custom subagent types). Document tool differences in `primitives/tools.md`; keep the rules themselves portable.
 
@@ -104,7 +104,7 @@ Debugging is hypothesis-driven, not stab-in-the-dark. Treat each bug as a scient
   - T2: run the narrowest relevant check.
   - T3+: run targeted tests plus broader regression checks. Invoke the Regression Test pipeline (`pipelines/regression-test.md`).
   - UI changes: run visual or browser checks when the environment supports it, otherwise state the limitation. See Testing Philosophy § Black-box inspection.
-- **Delegate exploration to protect main context**: Main session context is for synthesis and decisions, not raw search results. Open-ended discovery (find all callers, audit a directory, survey a codebase) goes to a subagent that returns a scoped finding. Apply when more than ~3 search rounds are likely. **Reason:** main context is the scarce resource; raw results crowd out the synthesis room you need later.
+- **Delegate exploration to protect main context**: Main session context is for synthesis and decisions, not raw search results. Open-ended discovery (find all callers, audit a directory, survey a codebase) goes to a sub-agent that returns a scoped finding. Apply when more than ~3 search rounds are likely. **Reason:** main context is the scarce resource; raw results crowd out the synthesis room you need later.
 - **MCP usage**: Always ask before invoking an MCP tool (Coda, Gmail, Calendar, etc.), regardless of read or write nature.
 - **Ask vs. assume**: For T1 work, assume silently. For T2, state the assumption inline and proceed. For T3+, ask before starting if anything is genuinely ambiguous, otherwise state the assumption and proceed. "Genuinely ambiguous" means multiple paths have similar plausibility.
 
@@ -123,7 +123,7 @@ Session-level patterns to recognize and break early:
 - **Correcting over and over**: same wrong behavior corrected repeatedly. Context pollutes with failed approaches. Fix: after two failed corrections, restart with a sharper prompt that incorporates what was learned.
 - **Over-specified rules**: too many rules cause important ones to get lost. Fix: prune rules that don't change behavior.
 - **Trust-then-verify gap**: plausible-looking implementation that doesn't handle edge cases. Fix: always provide verification (tests, scripts, screenshots), don't ship without.
-- **Infinite exploration**: open-ended investigation that consumes context without producing scoped findings. Fix: bound the scope upfront, or delegate to a subagent so exploration doesn't pollute main context.
+- **Infinite exploration**: open-ended investigation that consumes context without producing scoped findings. Fix: bound the scope upfront, or delegate to a sub-agent so exploration doesn't pollute main context.
 
 ## Anti-Rules
 A short list of things never to do. Negative rules earn their place by recurrence; this list grows as patterns repeat.

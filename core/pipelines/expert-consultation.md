@@ -1,6 +1,6 @@
 # Pipeline: Expert Consultation
 
-Single-specialist dispatch. Use when a question touches a specific framework, library, language feature, security concern, architecture decision, or other domain with clear subject-matter expertise. Spawn the relevant specialist persona to research and weigh in *before* answering.
+Single-specialist dispatch. Use when a question touches a specific framework, library, language feature, security concern, architecture decision, or other domain with clear subject-matter expertise. Apply the relevant specialist perspective *before* answering.
 
 The personas (`primitives/personas.md`) are not just for formal code review. They are primitives any pipeline can use.
 

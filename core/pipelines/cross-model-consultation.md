@@ -28,7 +28,7 @@ Spawn parallel queries to other model providers when the primary model alone mig
 Each tool is a primitive. See `primitives/tools.md` for affordances. The "primary" CLI is whichever you are running; the others are siblings to consult. Verify availability with `which <name>` first.
 
 - `claude -p "<prompt>"`: Anthropic's Claude Code. Strong general reasoning, broad tool affordances. Use as a sibling when running from Codex or Gemini.
-- `codex exec "<prompt>"`: OpenAI's Codex CLI. Available models depend on the account tier and shift over time, so inspect `~/.codex/models_cache.json` for the live catalog or run `codex` interactively to see what's exposed. The default model lives in `~/.codex/config.toml`.
+- `codex exec "<prompt>"`: OpenAI's Codex CLI. Available models depend on the account tier and shift over time (`codex debug models` for the live catalog). The default model lives in `~/.codex/config.toml`.
 - `gemini -p "<prompt>"`: Google's Gemini CLI. The current Pro tier (verify with `gemini --version` and the `/model` command in interactive mode) offers a 1M-token context window, extended to 2M for some configurations.
 
 ### Model and CLI freshness
