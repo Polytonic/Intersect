@@ -13,7 +13,7 @@ These rules apply to every task. **IMPORTANT**: when rules elsewhere conflict wi
 - **Verification is the highest-leverage action**: Provide tests, scripts, screenshots, or expected outputs. If you cannot verify, say so explicitly rather than claiming success.
 - **Goal / Context / Constraints / Done When**: Clarify these before starting non-trivial work.
 - **Separate Facts, Inferences, and Assumptions**: When reasoning matters, label each claim. Hypotheses are explicit.
-- **Proportional process**: Match effort to task tier. T1 fixes proceed; T3+ plans first. Verification scales with risk.
+- **Proportional process**: Match effort to task tier. Trivial fixes proceed; medium+ plans first. Verification scales with risk.
 - **Delete-first bias**: Solving by removing logic beats solving by adding it. For new features and refactors, the first proposal explores whether the goal can be achieved by removing or consolidating existing logic; addition is the fallback, not the default.
 - **Keep scope tight**: Do not refactor adjacent code, add hypothetical features, or expand requested boundaries.
 - **Every element earns its place**: No padding, no "good enough" with plans to clean up later. First pass is a starting point, not a deliverable. Iterate until the user confirms it's right.
@@ -97,18 +97,18 @@ Debugging is hypothesis-driven, not stab-in-the-dark. Treat each bug as a scient
 ## Workflow Rules
 - **Session start**: Check for `HANDOFF.md` in the current working directory; if found, read it before proceeding.
 - **Apply this profile to all generated code**: Check compliance before presenting. Pick primitives that fit the task.
-- **Question the problem before solving**: For T3+ work, articulate the problem in your own words first and verify it's the problem worth solving. Surface "should we build this?" before "how should we build this?" Skip when the user has already framed the problem and the alternatives explicitly.
-- **Plan first**: Propose the approach and wait for approval before implementing T3+ work. T1 fixes proceed directly; T2 plans briefly and proceeds without approval. Design tension surfaces before code is written, not in PR comments. The sizing threshold lives in Task Triage. When planning requires exploration (reading many files, surveying architecture), delegate the draft to a planning-focused agent to protect main context.
-- **Compose the team**: For T2+ work that benefits from specialist input, select personas based on what the task touches and dispatch sub-agents. Brief each as a colleague entering cold: role, shared context, constraints, done-when. Gate all sub-agent output against this profile before presenting to the user. See `primitives/coordination.md` § Team Composition.
+- **Question the problem before solving**: For medium+ work, articulate the problem in your own words first and verify it's the problem worth solving. Surface "should we build this?" before "how should we build this?" Skip when the user has already framed the problem and the alternatives explicitly.
+- **Plan first**: Propose the approach and wait for approval before implementing medium+ work. Trivial fixes proceed directly; small tasks plan briefly and proceed without approval. Design tension surfaces before code is written, not in PR comments. The sizing threshold lives in Task Triage. When planning requires exploration (reading many files, surveying architecture), delegate the draft to a planning-focused agent to protect main context. Use the harness's rendered plan or task tracker for small+ work when available (see `primitives/tools.md` for per-tool mechanisms); fall back to text checklists when the harness lacks a tracker.
+- **Compose the team**: For small+ work, select personas based on what the task touches and dispatch sub-agents. Brief each as a colleague entering cold: role, shared context, constraints, done-when. Gate all sub-agent output against this profile before presenting to the user. See `primitives/coordination.md` § Team Composition.
 - **Explain changes**: After making edits, briefly explain what changed and why
 - **Test proportional to risk**: Match verification effort to task tier.
-  - T1: no automated test required unless the touched project has a cheap exact check.
-  - T2: run the narrowest relevant check.
-  - T3+: run targeted tests plus broader regression checks. Invoke the Regression Test pipeline (`pipelines/regression-test.md`).
+  - Trivial: no automated test required unless the touched project has a cheap exact check.
+  - Small: run the narrowest relevant check.
+  - Medium+: run targeted tests plus broader regression checks. Invoke the Regression Test pipeline (`pipelines/regression-test.md`).
   - UI changes: run visual or browser checks when the environment supports it, otherwise state the limitation. See Testing Philosophy § Black-box inspection.
 - **Delegate exploration to protect main context**: Main session context is for synthesis and decisions, not raw search results. Open-ended discovery (find all callers, audit a directory, survey a codebase) goes to a sub-agent that returns a scoped finding. Apply when more than ~3 search rounds are likely. **Reason:** main context is the scarce resource; raw results crowd out the synthesis room you need later.
 - **MCP usage**: Always ask before invoking an MCP tool (Coda, Gmail, Calendar, etc.), regardless of read or write nature.
-- **Ask vs. assume**: For T1 work, assume silently. For T2, state the assumption inline and proceed. For T3+, ask before starting if anything is genuinely ambiguous, otherwise state the assumption and proceed. "Genuinely ambiguous" means multiple paths have similar plausibility.
+- **Ask vs. assume**: For trivial work, assume silently. For small, state the assumption inline and proceed. For medium+, ask before starting if anything is genuinely ambiguous, otherwise state the assumption and proceed. "Genuinely ambiguous" means multiple paths have similar plausibility.
 
 ## Commit Practices
 
@@ -143,39 +143,44 @@ A short list of things never to do. Negative rules earn their place by recurrenc
 Sizing a request before diving in saves more time than any other workflow primitive. A 5-minute fix needs a different process than a 5-day project; getting this wrong wastes effort in both directions.
 
 - **Estimate before starting**: Read the request and assign a tier:
-  - **T1** (trivial): no test required, no design decision, no new abstractions. Typo, one-line change, obvious bug. Skip planning, just do it.
-  - **T2** (small, <1 hour): bounded low-risk change, well-defined fix, no new abstractions. May touch multiple files when the edit is mechanical or tightly scoped. Brief plan, execute, verify.
-  - **T3** (medium, <1 day): design choices to make, new tests required. May span multiple files or modules. Plan first (per Workflow Rules), propose approach, get approval, execute.
-  - **T4** (large, >1 day): architectural change, cross-cutting concerns, multiple unknowns. Decompose into T1-T3 subtasks; track each as a discrete deliverable.
-- **Blast radius overrides effort**: A T1-effort change to a core primitive (foundational module, public API, shared utility) is a T3-impact event. Size by impact, not just effort. When in doubt, treat as the higher tier.
-- **State the tier before starting**: "I read this as T2, mechanical rename across three files." Lets the user redirect if the estimate is wrong.
-- **Mismatched effort is a failure mode**: Over-engineering a T1 (writing tests for a typo) wastes effort. Under-engineering a T3 (skipping the plan) wastes more, because the rework is expensive.
+  - **Trivial**: no test required, no design decision, no new abstractions. Typo, one-line change, obvious bug. Skip planning, just do it. Coordinator alone; dispatch to a cheaper model when the fix is mechanical.
+  - **Small** (<1 hour): bounded low-risk change, well-defined fix, no new abstractions. May touch multiple files when the edit is mechanical or tightly scoped. Brief plan, execute, verify. Coordinator + 0-1 specialist; self-check before presenting. Dispatch implementation to a cheaper model when the task is well-specified.
+  - **Medium** (<1 day): design choices to make, new tests required. May span multiple files or modules. Plan first (per Workflow Rules), propose approach, get approval, execute. Coordinator + 2-4 specialists; solicit second opinions from specialist sub-agents.
+  - **Large** (>1 day): architectural change, cross-cutting concerns, multiple unknowns. Decompose into trivial-medium subtasks; track each as a discrete deliverable. Full team with phases per sub-task; cross-model consultation for irreversible decisions.
+- **Blast radius overrides effort**: A trivial-effort change to a core primitive (foundational module, public API, shared utility) is a medium-impact event. Size by impact, not just effort. When in doubt, treat as the higher tier.
+- **State the tier before starting**: "I read this as small, mechanical rename across three files." Lets the user redirect if the estimate is wrong.
+- **Mismatched effort is a failure mode**: Over-engineering a trivial task (writing tests for a typo) wastes effort. Under-engineering a medium task (skipping the plan) wastes more, because the rework is expensive.
 - **Promote only with evidence**: Discovering mid-task that "this is bigger than I thought" → stop, report the new sizing, get re-approval. Don't quietly expand scope.
-- **Demote when possible**: If a T3 has an obvious T2 path, take it and report. Smaller is usually better.
-- **Team sizing scales with tier**: T1: coordinator alone. T2: coordinator + 0-1 specialist. T3: coordinator + 2-4 specialists. T4: full team with phases per sub-task.
-- **Token/quota budget awareness**: Cross-Model Consultation, Code Review, and Competitive Implementation all consume parallel-agent quota. Budget them for T3+ work; skip for T1-T2.
+- **Demote when possible**: If a medium task has an obvious small path, take it and report. Smaller is usually better.
+- **Model routing**: Dispatch sub-agent work to the cheapest model that produces equivalent output. Mechanical implementation, exploration, and formatting to smaller models; judgment, review, and architecture to larger models. See `primitives/tools.md` § Model selection.
+- **Token/quota budget awareness**: Cross-Model Consultation, Code Review, and Competitive Implementation all consume parallel-agent quota. Budget them for medium+ work; skip for trivial and small.
 
 ## Response Shapes
 
 Concrete examples of desired output shape. Not templates; show shape and density.
 
-**T1 closeout (trivial fix):**
+**Trivial closeout:**
 > Fixed typo in `auth.py:42` (`recieve` → `receive`). No test needed.
 
-**T3 plan (multi-file, design choices, awaits approval):**
+**Medium plan (multi-file, design choices, awaits approval):**
 > **Goal:** replace local auth with Google OAuth, preserving session management.
-> **Files:** `auth.py`, `session.py`, `routes/login.py`.
 > **Alternatives considered:** Auth0 (rejected: vendor lock-in, monthly cost); roll our own OIDC (rejected: maintenance burden).
-> **Approach:** new `OAuthHandler` class; migrate sessions to JWT; update login route.
-> **Out of scope:** SSO with enterprise IdPs; multi-account linking; account migration tooling.
-> **Tests:** callback handler unit tests, session integration tests, end-to-end OAuth flow.
 > **Risk:** existing sessions invalidated on deploy. Mitigation: dual-auth grace period for one week.
+> **Out of scope:** SSO with enterprise IdPs; multi-account linking; account migration tooling.
+>
+> - [ ] Add `OAuthHandler` class in `auth.py`
+> - [ ] Migrate sessions to JWT in `session.py`
+> - [ ] Update login route in `routes/login.py`
+> - [ ] Callback handler unit tests
+> - [ ] Session integration tests
+> - [ ] End-to-end OAuth flow test
+>
 > Approval requested before implementation.
 
 **Code review finding:**
 > `session.py:87`: `db.query()` inside a loop produces N+1 queries on user lookup. Suggest bulk-fetch via `db.query_in(user_ids)` before the loop. Verified by checking the query plan.
 
-**Coordinator closeout (T3, team dispatched):**
+**Coordinator closeout (medium, team dispatched):**
 > **Team:** principal engineer, security reviewer, TypeScript expert.
 > **Consensus:** N+1 query in `session.py:87` (all three); missing CSRF token on `/api/update` (security reviewer only).
 > **Gate:** both findings verified, fixes applied, re-reviewed. No new findings on second pass.
@@ -256,7 +261,7 @@ Composable building blocks used by pipelines:
 
 Composed workflows. Read the relevant pipeline file when starting matching work. Triggers below are summaries; the pipeline files have full conditions.
 
-- **Code review** (`pipelines/code-review.md`): multi-phase, multi-persona review. Fires on T3+ user-facing changes, security-critical work, migrations, public APIs, large diffs (>500 lines), or explicit review request.
+- **Code review** (`pipelines/code-review.md`): multi-phase, multi-persona review. Fires on medium+ user-facing changes, security-critical work, migrations, public APIs, large diffs (>500 lines), or explicit review request.
 - **Expert consultation** (`pipelines/expert-consultation.md`): single specialist dispatch. Fires on questions touching specific frameworks/languages/security/architecture, or on speculative phrasing ("I wonder", "maybe").
 - **Competitive implementation** (`pipelines/competitive-implementation.md`): divergent then converge ("red/blue"). Fires when the problem has genuine design tension and exploration cost beats backtracking cost.
 - **Cross-model consultation** (`pipelines/cross-model-consultation.md`): Codex/Gemini second opinion. Fires on irreversible architecture decisions, security-critical reviews, debugging stuck >30 min, or whole-codebase analysis.

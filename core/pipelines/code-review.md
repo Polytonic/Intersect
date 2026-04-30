@@ -16,7 +16,7 @@ Override the gate when the change is small but high-stakes (auth changes, data m
 
 ## Persona selection
 
-The full persona roster lives in `primitives/personas.md`. **Default cap:** at most 3 personas per phase for routine T3 reviews. Lift the cap for the same triggers that unlock the full pipeline (security-critical work, migrations, public APIs, large diffs >500 lines, or explicit deep review request). Choose based on what the change touches; skip those that don't apply (e.g., Internationalization on a single-locale personal site, Product manager on internal tooling with a clear owner). Add task-specific personas when useful (e.g., a **migration auditor** for verification reviews, a **compatibility auditor** for public API changes). **Chaos Monkey QA** is always included when there is a user-facing surface.
+The full persona roster lives in `primitives/personas.md`. **Default cap:** at most 3 personas per phase for routine medium reviews. Lift the cap for the same triggers that unlock the full pipeline (security-critical work, migrations, public APIs, large diffs >500 lines, or explicit deep review request). Choose based on what the change touches; skip those that don't apply (e.g., Internationalization on a single-locale personal site, Product manager on internal tooling with a clear owner). Add task-specific personas when useful (e.g., a **migration auditor** for verification reviews, a **compatibility auditor** for public API changes). **Chaos Monkey QA** is always included when there is a user-facing surface.
 
 ## Phase 1: Individual review
 

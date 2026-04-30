@@ -16,7 +16,7 @@ The profile holder (the main agent loaded with `agents.md`) is the coordinator. 
 7. **Iterate** — send work back when it doesn't meet the bar, with specific feedback
 
 **What the coordinator does NOT do:**
-- Implementation work that a sub-agent could handle (T1 work or faster-to-do-inline is the exception)
+- Implementation work that a sub-agent could handle (trivial work or faster-to-do-inline is the exception)
 - Open-ended exploration (delegate to search-focused agents)
 - Hold raw search results or file contents beyond what synthesis requires
 
@@ -27,10 +27,10 @@ The profile holder (the main agent loaded with `agents.md`) is the coordinator. 
 Select the team based on what the task touches, not a fixed roster. The persona roster lives in `primitives/personas.md`; this section defines *when* and *how many* to activate.
 
 **Sizing heuristic:**
-- **T1**: coordinator alone. No dispatch overhead for trivial work.
-- **T2**: coordinator + 0-1 specialist. Dispatch only when the coordinator's own judgment is insufficient for the domain (unfamiliar language, security surface, accessibility).
-- **T3**: coordinator + 2-4 specialists. Compose based on the task's surface area.
-- **T4**: full team with phases. Decompose into sub-tasks first; each sub-task gets its own team composition.
+- **Trivial**: coordinator alone. No dispatch overhead.
+- **Small**: coordinator + 0-1 specialist. Self-check before presenting; dispatch implementation to a cheaper model when the task is well-specified.
+- **Medium**: coordinator + 2-4 specialists. Solicit second opinions from specialist sub-agents.
+- **Large**: full team with phases. Decompose into sub-tasks first; each sub-task gets its own team composition.
 
 **Selection signals** — which personas activate depends on what changed:
 - Languages in the diff: language expert(s)
