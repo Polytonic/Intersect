@@ -211,33 +211,18 @@ Documentation is a separate craft from code. Code says *what* and *how*; documen
 - **Examples are tested**: Every code example is part of the test suite, or marked "illustrative only" if not testable.
 
 ## Maintenance
-The collaboration improves only when we capture lessons. Memory and this preferences file exist precisely so corrections, preferences, and emergent patterns persist across conversations. Notice when something is worth capturing and propose the update; don't wait to be asked.
+**The Ratchet:** Every rule in this file should trace to a specific failure, validated judgment, or external authority. New rules without that trace are speculation; old rules whose trace is no longer relevant are removable.
 
-**The Ratchet:** Every rule in this file should trace to a specific failure, validated judgment, or external authority (PEP 8, WCAG, etc.). New rules without that trace are speculation. Old rules whose trace is no longer relevant are removable. **Reason:** rules without provenance harden into laws no one can question; the ratchet keeps the file pruneable.
+Run the maintenance pipeline (`pipelines/maintenance.md`) at session end or when context pressure is evident — no explicit invocation required. Watch for these trigger events throughout the session:
 
-**Triggers (when to propose an update):**
-- **Repeated correction**: Same behavior corrected twice (this conversation, or recalled from memory) means a missing rule. Propose a feedback memory or preferences-file addition.
-- **Validated judgment**: A non-obvious choice met with "yes, exactly" or accepted without pushback is worth saving. Save confirmations, not just corrections, or you drift toward over-cautiousness.
-- **Novel composition**: Primitives assembled in a new way that worked: name it, propose it as a composition pattern (a new file in `pipelines/`).
-- **Recurring context**: Same constraint, file path, or domain detail pasted across conversations belongs in memory.
-- **Stale memory hit**: A recalled memory turned out wrong or outdated: update or remove it. Don't silently work around it.
-- **External tooling drift**: When you notice an update to a CLI, dependency, or model, check whether referenced versions in this file or memory are now stale.
-- **Capability ratchet**: When a referenced model or CLI upgrades meaningfully, audit whether any rule in this file was patching the old model's limitation. Scaffolding for now-solved problems makes the file harder to follow without improving output. Remove or demote rules that no longer earn their place.
-- **Plan/subscription drift**: Paid AI tool subscriptions and quotas can change without notice and aren't auto-detectable. Re-verify if (a) a quota or auth error surfaces, (b) the user mentions a subscription change, or (c) more than ~3 months have elapsed since the last verification date stamped in the relevant memory (e.g. `user_ai_plans`).
-
-**Where to write:**
-- **Memory system** (auto-loads each session): user facts, feedback, project context, references. Personal, cross-project. Each tool exposes its own memory mechanism (Claude Code: `~/.claude/projects/<encoded-path>/memory/`; Gemini CLI: `/memory` command writing to `~/.gemini/GEMINI.md`; Codex CLI: no built-in memory, treat as conversation-scoped).
-- **Global preferences file** (this one, version-controlled in `~/Public/Intersect`, symlinked into `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, `~/.gemini/GEMINI.md`): reusable primitives, composition patterns, style rules. Cross-project, intentional.
-- **Project-local preferences** (`AGENTS.md` or `CLAUDE.md` at the project root): scope-bounded rules. Lives with the codebase.
-
-**How to propose:**
-- Surface the proposal explicitly: "Noticed X happening twice, want me to add Y to the preferences file?" Memory writes can be quiet (per existing rules); preferences-file changes warrant approval.
-- Show the exact diff, not the intent. Paste the text and the location.
-- Pair the rule with its trigger and reasoning. Future-me needs to know *why* to judge edge cases.
-
-**Cadence:**
-- End of significant sessions: propose candidate captures from the Triggers above (recurring corrections, validated judgments, novel compositions, recurring context, stale memory hits), then ask if anything else is worth saving. Don't wait to be asked. One pass per session.
-- Periodically (every ~10 sessions or on request) audit memory for staleness, contradictions, and items that have graduated from feedback to assumed default.
+- **Repeated correction**: same behavior corrected twice
+- **Validated judgment**: non-obvious choice accepted without pushback
+- **Novel composition**: new primitive combination that worked — candidate for a pipeline file
+- **Recurring context**: same constraint, path, or detail appearing across sessions
+- **Stale memory hit**: recalled memory turned out wrong or outdated
+- **External tooling drift**: CLI, dependency, or model version noticed to differ from what's documented
+- **Capability ratchet**: model upgrade makes an existing scaffolding rule obsolete
+- **Plan/subscription drift**: quota or auth error, subscription change, or >3 months since last verification
 
 ## Appendix
 
@@ -267,5 +252,6 @@ Composed workflows. Read the relevant pipeline file when starting matching work.
 - **Competitive implementation** (`pipelines/competitive-implementation.md`): divergent then converge ("red/blue"). Fires when the problem has genuine design tension and exploration cost beats backtracking cost.
 - **Cross-model consultation** (`pipelines/cross-model-consultation.md`): Codex/Gemini second opinion. Fires on irreversible architecture decisions, security-critical reviews, debugging stuck >30 min, or whole-codebase analysis.
 - **Regression test** (`pipelines/regression-test.md`): run automated checks after code-modifying changes, triage failures. Fires after any code/config/content change with automated checks; skip only for pure docs or cosmetic edits.
+- **Maintenance** (`pipelines/maintenance.md`): session-end capture and handoff. Fires at natural session breaks or context pressure — no invocation required. Scans history for trigger events, writes approved captures to memory and agents.md, outputs HANDOFF.md.
 
 <!-- Add new top-level sections above this line. New primitives go in primitives/, new pipelines in pipelines/. -->
