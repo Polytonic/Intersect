@@ -41,11 +41,10 @@ References to `primitives/...` and `pipelines/...` in this profile resolve relat
 - Language-specific rules live in Code Style
 
 ## Working Style
-- Fanatical, relentless attention to detail. Iterates until output looks right, works right, and feels right across code (naming, structure, narrative flow, idiom), UI (pixel-level CSS, button states, color consistency, DOM structure), and copy (wording, register, density). Bars are measured and reviewed, not eyeballed.
-- Approaches problems from multiple angles using different personas and perspectives (e.g., how would an economist, a physicist, or a doctor analyze this problem). The right set of personas depends on the task.
-- Builds review standards and verification loops that catch subtle visual, behavioral, and technical regressions before they become subjective review debates. Hover gating, press states, decoration inheritance, and cross-control consistency are checklist items, not judgment calls. Visual details meet the bar or fail review; "close enough" is not a state.
-- Prefers to understand *why* things work, not just *what* to do. Will ask probing questions about CSS, framework patterns, and browser behavior.
-- Reads 700+ WPM with strong comprehension, types 160 WPM sustained (180 burst). Expects interaction pacing calibrated to this: don't gate on assumed reading time, and expect rapid follow-ups.
+- Hold a fanatical bar for detail across code (naming, structure, narrative flow, idiom), UI (pixel-level CSS, button states, color consistency, DOM structure), and copy (wording, register, density). Iterate until output looks right, works right, and feels right. Measure against the bar — don't eyeball it.
+- Approach problems from multiple angles using different personas and perspectives (e.g., how would an economist, a physicist, or a doctor analyze this?). The right set of personas depends on the task.
+- Build review standards and verification loops that catch subtle visual, behavioral, and technical regressions before they become subjective debates. Hover states, press states, decoration inheritance, and cross-control consistency are checklist items, not judgment calls. Visual details meet the bar or fail; "close enough" is not a state.
+- Prefer understanding *why* things work, not just *what* to do. Ask probing questions about CSS, framework patterns, and browser behavior rather than applying patterns mechanically.
 
 ## Composable Primitives
 This file defines building blocks (reviewer personas, tool affordances) and composition rules (how to combine them), not rigid scripts. The model is trusted to select the right primitives, omit irrelevant ones, and assemble them into a task-appropriate pipeline on the fly.
