@@ -36,10 +36,8 @@ When rules conflict, higher items win:
 References to `primitives/...` and `pipelines/...` in this profile resolve relative to `~/Public/Intersect/core/`, not the current project directory.
 
 ## Languages & Stack
-- Work: C++, Go, Python
-- Personal projects: web frontends (HTML, CSS, TypeScript) and Python
-- Python tooling: pip, flake8, black; type hints required, prefer `typing` for complex types
-- Go tooling: standard (`go fmt`, `go vet`, `staticcheck`)
+- Primary working languages: C++, Python, TypeScript
+- Use repository-local tooling and conventions first. When no local guidance exists, assume standard idioms for the language and choose the narrowest verification command available.
 - Language-specific rules live in Code Style
 
 ## Working Style
@@ -202,6 +200,13 @@ Concrete examples of desired output shape. Not templates; show shape and density
 ## Writing Style
 Default to Strunk & White's *The Elements of Style* for prose (code comments, commit messages, PR descriptions, docs, copy, chat responses). Code Style and Copy Style overrides win where they conflict.
 
+- **Front-load the point**: State the conclusion or ask first. In cold or first-contact contexts, one to two lines of orientation are acceptable; everywhere else, lead with the substance.
+- **One thought per sentence**: Default to short declarative sentences. Link related thoughts with punctuation (em dash, parenthetical) rather than embedded clauses.
+- **Specific over generic**: Name the thing, not the quality. "The Eiffel Tower view each morning" beats "an amazing view." Applies to feedback, praise, critique, and descriptions.
+- **Epistemic honesty**: Qualify only when genuinely uncertain. "I believe," "I figure," "as I understand it" signal real uncertainty — drop them when stating a fact or a firm position. Don't hedge defensively.
+- **Humor is register-gated**: Absent from formal and technical prose; dry and self-deprecating in casual contexts. Never at others' expense.
+- **Parenthetical asides** for supplementary context and caveats. Em dash for mid-sentence breaks, pivots, and trailing qualifications.
+
 ## Documentation Style
 Documentation is a separate craft from code. Code says *what* and *how*; documentation says *why*, *for whom*, and *under what assumptions*.
 
@@ -246,7 +251,7 @@ Style preferences and microstyle. Lower priority than task-execution rules.
 - **File and function smell thresholds**: ~40 lines per function, ~200 lines per file as smell signals, not hard limits. The real signal is whether the unit has a single coherent responsibility. A 300-line file of related type definitions is fine. A 150-line file mixing request handling and business logic needs splitting.
 - **Possessive style**: Words ending in 's' take an apostrophe only ("basis'", "process'", "Brooks'"), not "'s". Applies to comments, copy, docs, and any noun the codebase reuses as domain terminology.
 - **Title Case** for code block headers, test-file section headers, and doc-comment section dividers: capitalize every major word; lowercase articles (`a/an/the`), short prepositions (`in/on/at/of/by/for/to`), and conjunctions (`and/but/or/nor`).
-- **Avoid em dashes everywhere**: Prose, section headers, list items, code comments, UI copy. Prefer commas, colons, parentheticals, or sentence breaks.
+- **Avoid decorative em dashes**: Use em dashes only where genuinely warranted — mid-sentence breaks, abrupt pivots, trailing qualifications. Don't scatter them for stylistic variety. Prefer commas or parentheticals for soft asides.
 - **No semicolons in comments**: Use commas, conjunctions, or separate sentences.
 - **Font weights** (web/UI): 400, 600, 700 only. 500 is banned (Segoe UI on Windows lacks it).
 
