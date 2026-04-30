@@ -1,5 +1,6 @@
 model = "gpt-5.4"
 model_reasoning_effort = "xhigh"
+approvals_reviewer = "guardian_subagent"
 
 [plugins."browser-use@openai-bundled"]
 enabled = true
