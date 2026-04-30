@@ -65,3 +65,7 @@ Once HANDOFF.md is written:
 > "HANDOFF.md written. Ready to compact when you are."
 
 Do not compact automatically.
+
+## Periodic Audit
+
+Separately from session-end capture, periodically (every ~10 sessions or on request) audit memory for staleness, contradictions, and items that have graduated from feedback to assumed default. This is a different operation from the session-end scan — it reviews accumulated memory across sessions, not events within the current one.

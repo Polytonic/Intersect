@@ -28,6 +28,7 @@ Each AI coding CLI is a primitive that pipelines can dispatch work to. They diff
   - Project-level + global AGENTS.md scope layering. **No `@import` syntax**. The model reads referenced files on demand.
   - Available models depend on account tier (inspect `~/.codex/models_cache.json`).
   - Configurable reasoning effort via `model_reasoning_effort` in `~/.codex/config.toml`.
+- **Memory**: Persistent memory at `~/.codex/memories/`. Stores task-scoped rollout summaries, user preferences, and reusable knowledge.
 - **When to dispatch**: Cross-model consultation, second opinion on architecture decisions. Primary CLI in environments where Claude Code is unavailable (e.g., work-mandated tooling). When running there, treat Codex as the home base; the pipelines and personas apply identically.
 
 ## Gemini CLI (`gemini`)
@@ -38,6 +39,7 @@ Each AI coding CLI is a primitive that pipelines can dispatch work to. They diff
   - `@file.md` imports in GEMINI.md (relative or absolute paths). Hierarchical context loading from cwd up to a trusted root.
   - `/memory` command writes to GEMINI.md as persistent context.
   - MCP support.
+- **Memory**: `/memory` command writes to `~/.gemini/GEMINI.md`.
 - **When to dispatch**: Whole-codebase analysis. Low-quota fallback for routine tasks.
 
 ## Composing tools

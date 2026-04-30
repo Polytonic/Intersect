@@ -210,17 +210,17 @@ Documentation is a separate craft from code. Code says *what* and *how*; documen
 - **Examples are tested**: Every code example is part of the test suite, or marked "illustrative only" if not testable.
 
 ## Maintenance
-**The Ratchet:** Every rule in this file should trace to a specific failure, validated judgment, or external authority. New rules without that trace are speculation; old rules whose trace is no longer relevant are removable.
+**The Ratchet:** Every rule in this file should trace to a specific failure, validated judgment, or external authority. New rules without that trace are speculation; old rules whose trace is no longer relevant are removable. **Reason:** rules without provenance harden into laws no one can question; the ratchet keeps the file pruneable.
 
 Run the maintenance pipeline (`pipelines/maintenance.md`) at session end or when context pressure is evident — no explicit invocation required. Watch for these trigger events throughout the session:
 
-- **Repeated correction**: same behavior corrected twice
-- **Validated judgment**: non-obvious choice accepted without pushback
+- **Repeated correction**: same behavior corrected twice. Propose a feedback memory or agents.md addition.
+- **Validated judgment**: non-obvious choice accepted without pushback. Save confirmations, not just corrections, or the profile drifts toward over-cautiousness.
 - **Novel composition**: new primitive combination that worked — candidate for a pipeline file
 - **Recurring context**: same constraint, path, or detail appearing across sessions
-- **Stale memory hit**: recalled memory turned out wrong or outdated
-- **External tooling drift**: CLI, dependency, or model version noticed to differ from what's documented
-- **Capability ratchet**: model upgrade makes an existing scaffolding rule obsolete
+- **Stale memory hit**: recalled memory turned out wrong or outdated. Update or remove it; don't silently work around it.
+- **External tooling drift**: CLI, dependency, or model version noticed to differ from what's documented. Check both this file and memory for stale references.
+- **Capability ratchet**: model upgrade makes an existing scaffolding rule obsolete. Remove or demote rules that no longer earn their place.
 - **Plan/subscription drift**: quota or auth error, subscription change, or >3 months since last verification
 
 ## Appendix
