@@ -44,3 +44,4 @@ Apply fixes from consensus findings, then repeat Phases 1-3. **Default cap:** tw
 - Instruct all agents to think deeply and thoroughly, using as many tokens as needed.
 - Test empirically when possible (e.g., remove cargo-culted values and verify the code still works).
 - Shared context (scope, files changed, diff stat) should be written once and referenced by all agents, not re-discovered per agent.
+- **Agent prompt construction**: Brief each persona agent as a colleague entering cold — it has no prior context. Include: (1) the persona's role and what to focus on, (2) the shared context (diff, scope, files changed), (3) project-specific constraints or threat model relevant to the persona, (4) the compliance rules from agents.md that the persona should check against. Same shared context for all agents, distinct focus lens for each.

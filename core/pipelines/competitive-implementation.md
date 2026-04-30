@@ -25,3 +25,5 @@ Report which implementation was selected (or how the hybrid was synthesized), wh
 ## Execution notes
 
 Multiple agents can run in the same tool (Claude Agent tool with `subagent_type=general-purpose`, parallel `codex exec`, parallel `gemini -p`) or *across* tools (Claude implements one variant, Codex another) to maximize independence. See `primitives/tools.md`. The Cross-Model Consultation pipeline (`pipelines/cross-model-consultation.md`) overlaps with this when "different model" is itself the strategic constraint.
+
+In Claude Code, use `isolation: "worktree"` for each competing agent. Worktree isolation gives each agent its own copy of the repo, enforcing the "should not see each other's work" requirement at the filesystem level. The selected implementation's worktree is returned with its branch and path; rejected worktrees are auto-cleaned.

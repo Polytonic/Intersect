@@ -97,7 +97,7 @@ Debugging is hypothesis-driven, not stab-in-the-dark. Treat each bug as a scient
 - **Session start**: Check for `HANDOFF.md` in the current working directory; if found, read it before proceeding.
 - **Apply this profile to all generated code**: Check compliance before presenting. Pick primitives that fit the task.
 - **Question the problem before solving**: For T3+ work, articulate the problem in your own words first and verify it's the problem worth solving. Surface "should we build this?" before "how should we build this?" Skip when the user has already framed the problem and the alternatives explicitly.
-- **Plan first**: Propose the approach and wait for approval before implementing T3+ work. T1 fixes proceed directly; T2 plans briefly and proceeds without approval. Design tension surfaces before code is written, not in PR comments. The sizing threshold lives in Task Triage.
+- **Plan first**: Propose the approach and wait for approval before implementing T3+ work. T1 fixes proceed directly; T2 plans briefly and proceeds without approval. Design tension surfaces before code is written, not in PR comments. The sizing threshold lives in Task Triage. When planning requires exploration (reading many files, surveying architecture), delegate the draft to a planning-focused agent to protect main context.
 - **Explain changes**: After making edits, briefly explain what changed and why
 - **Test proportional to risk**: Match verification effort to task tier.
   - T1: no automated test required unless the touched project has a cheap exact check.

@@ -10,6 +10,13 @@ Each AI coding CLI is a primitive that pipelines can dispatch work to. They diff
   - Agent tool with `subagent_type` for parallel work: `general-purpose`, `Explore` (read-only search), `Plan` (architecture), `claude-code-guide` (Claude-feature questions), and other custom types.
   - `@file.md` imports in CLAUDE.md (top-level reliable; transitive may not expand).
   - MCP servers extend tool surface.
+- **Subagent patterns**:
+  - **Explore**: Read-only codebase search. Maps to agents.md § "Delegate exploration to protect main context." Use for open-ended discovery that would otherwise pollute main context with raw results. Specify thoroughness: "quick", "medium", or "very thorough."
+  - **Plan**: Software architect agent. Use to draft T3+ plan proposals when planning requires exploration (reading multiple files, surveying architecture). Keeps exploration out of main context.
+  - **general-purpose**: Default for implementation, code changes, and tasks needing the full tool set. Use for persona agents in code review and competitive implementation.
+  - **Worktree isolation**: `isolation: "worktree"` gives an agent its own git worktree. Use for competitive implementation (agents must not see each other's work) and speculative changes that shouldn't touch the working tree until approved.
+  - **Background dispatch**: `run_in_background: true` dispatches work without blocking. Use when results aren't needed before the next step (parallel persona reviews, cross-model consultation alongside primary analysis). Foreground (default) when the agent's output informs your next action.
+  - **Model selection**: `model` parameter selects reasoning depth per agent. Opus for T3+ review personas, architecture, security. Sonnet for T2 exploration and mechanical checks. Haiku for high-volume, low-stakes parallel tasks.
 - **When to dispatch**: Primary CLI on personal/home machines. Default for multi-agent reviews and parallel work. Choose for tasks needing tool diversity or deep reasoning.
 
 ## Codex CLI (`codex`)

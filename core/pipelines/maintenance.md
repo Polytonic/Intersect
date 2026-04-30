@@ -19,7 +19,7 @@ Review the session history for the trigger events listed in `agents.md § Mainte
 - **Evidence**: quote or summarize the relevant exchange
 - **Proposed action**: exact memory write (with frontmatter) or agents.md diff
 
-Collect all candidates before presenting — surface them at once, not one at a time.
+Collect all candidates before presenting — surface them at once, not one at a time. For long sessions (context visibly summarized or >50 exchanges), delegate the scan to a subagent to keep main context clean for the synthesis and presentation steps.
 
 ## Step 2: Present Candidates
 
