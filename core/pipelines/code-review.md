@@ -1,6 +1,6 @@
 # Pipeline: Code Review
 
-Multi-phase, multi-persona review. Use when asked to review code, or proactively after writing a non-trivial change.
+Multi-phase, multi-persona review. Quick Review fires automatically after any code change. The formal pipeline (Phase 1+) fires proactively after medium+ changes, or when explicitly requested.
 
 The review answers three questions: (1) did I miss anything when writing the code, (2) what would make this code better, (3) what improvements are worth considering.
 
@@ -8,11 +8,23 @@ The review answers three questions: (1) did I miss anything when writing the cod
 
 Match pipeline depth to the change's scope and blast radius per Task Triage:
 
-- **Small scope, low blast radius** → Phase 1 only.
+- **Trivial code change** → Quick Review as a coordinator self-check with the most relevant specialist lens. No dispatch unless it is effectively free.
+- **Small scope, low blast radius** → Quick Review (see below).
 - **Medium scope or elevated blast radius** (touches shared utilities, public interfaces, data models) → Phase 1 plus Phase 2.
 - **Large scope or high blast radius** (security-critical, migration, public API, cross-cutting, irreversible) → full pipeline (Phase 1-3 plus iteration).
 
 Blast radius overrides scope: a small edit to a core primitive is a medium-blast-radius event. Size by impact, not effort.
+
+## Quick Review
+
+Automatic after any trivial or small-scope code change. The goal is fast specialist feedback without ceremony.
+
+- Pick the single most relevant persona for the change.
+- Apply one specialist lens locally or dispatch one specialist, whichever is faster in the active tool. Dispatch is preferred only when it can run in parallel without delaying closeout.
+- Fold findings into the change summary. No separate review phase.
+- Name the specialist lens only when it affected the result or explains a tradeoff.
+- Escalate to Phase 1 if the review surfaces uncertainty that would change the recommendation.
+- One pass, no iteration.
 
 ## Persona selection
 

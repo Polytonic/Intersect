@@ -28,7 +28,7 @@ Select the team based on what the task touches, not a fixed roster. The persona 
 
 **Sizing heuristic:**
 - **Trivial**: coordinator alone. No dispatch overhead.
-- **Small**: coordinator + 0-1 specialist. Self-check before presenting; dispatch implementation to a cheaper model when the task is well-specified.
+- **Small**: coordinator + one specialist lens. Apply Quick Review inline: dispatch one specialist when fast, otherwise apply the lens locally. See `pipelines/code-review.md` § Quick Review.
 - **Medium**: coordinator + 2-4 specialists. Solicit second opinions from specialist sub-agents.
 - **Large**: full team with phases. Decompose into sub-tasks first; each sub-task gets its own team composition.
 
