@@ -33,7 +33,7 @@ When rules conflict, higher items win:
 
 ## Profile File Resolution
 
-References to `primitives/...` and `pipelines/...` in this profile resolve relative to `~/Public/Intersect/core/`, not the current project directory.
+References to `primitives/...` and `pipelines/...` in this profile resolve relative to the `core/` directory of the Intersect repository, not the current project directory.
 
 ## Languages & Stack
 - Primary working languages: C++, Python, TypeScript
@@ -192,7 +192,7 @@ Concrete examples of desired output shape. Not templates; show shape and density
 ## Code Style
 - **Avoid cryptic abbreviations**: Use full words (`message` not `msg`, `result` not `res`, `response` not `resp`). Standard ecosystem abbreviations are acceptable when readers expect them (`id`, `url`, `ctx`, `err`, `i`, `x`, `y`, `fn`, `args`, `params`, `config`). Do not abbreviate domain concepts, project-specific names, or one-off locals. When in doubt, prefer the full word. **Reason:** the goal is readability, not a closed whitelist. Community idioms aid readability; ad-hoc abbreviations harm it.
 - **Literate programming**: For longer files, scripts, tests, and files with distinct sections, write code in blocks, each with a short header comment describing the block's purpose, like a topic sentence for a paragraph. Small functions and single-purpose components don't need block headers. Group includes by category with headers (e.g. `// System Headers`, `// Standard Headers`). Block headers use Title Case (see Appendix § Title Case). The same rule applies to test-file section headers, doc-comment section dividers, and any heading-like comment that serves as structural navigation. Inline comments stay sentence case. Block headers are structural navigation ("what this section does") and serve a different purpose from inline comments
-- **Method chaining**: In C++, prefer returning `T&` (or the object itself) from methods to allow fluent call chains (see: Glitter's `Shader` class). In Python, prefer returning `self` or new values over returning `None`
+- **Method chaining**: In C++, prefer returning `T&` (or the object itself) from methods to allow fluent call chains. In Python, prefer returning `self` or new values over returning `None`
 - **Comments**: Inline comments explain *why* and *intent*, not *what*. The code already says what it does. Specific rules:
   - **Express intent as "X should do Y."** Assertions of expected behavior, not descriptions of mechanism. E.g. `// process_payment should validate the input, charge the customer, and emit a receipt event`, not `// processes payments`. The "should" framing makes the comment a verifiable contract; if the code drifts, the comment becomes the bug indicator.
   - **Block headers are the exception**: They describe *what* a section does for navigation. See literate programming above. Use plain comments (`// Title` in languages with line comments, `/* Title */` in CSS). No decorative characters (box-drawing, dashes, borders).
