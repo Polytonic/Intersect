@@ -120,7 +120,9 @@ Source of truth for AI-tool preferences. After any change:
 - Edits to `bin/intersect`: run `bash bin/test.sh`.
 - Any edit: run `intersect doctor`.
 
-Do not edit `.claude/settings.local.json` (gitignored, machine-local). Avoid editing `tools/codex/config.toml`'s `[projects.*]`, `[marketplaces.*]`, or `[tui.*]` sections; Codex re-creates those per machine and they should not travel.
+Tool-owned config is exclusive under `tools/`: Claude may edit `tools/claude/**`, Codex may edit `tools/codex/**`, and Gemini may edit `tools/gemini/**`. Do not edit another CLI's `tools/<tool>/` files unless the user explicitly asks for that config change. Shared content under `core/`, docs, and scripts is cross-tool.
+
+Do not edit `.claude/settings.local.json` (gitignored, machine-local). Within `tools/codex/config.toml`, avoid editing `[projects.*]`, `[marketplaces.*]`, or `[tui.*]`; Codex re-creates those per machine and they should not travel.
 
 ## Adding new content
 

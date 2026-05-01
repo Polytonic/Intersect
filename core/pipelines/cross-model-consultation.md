@@ -8,7 +8,7 @@ Spawn parallel queries to other model providers when the primary model alone mig
 - Security-critical code review (independent trainings catch different threat patterns).
 - Stuck on debugging for more than 30 minutes.
 - Validating a non-obvious technical claim before acting on it.
-- Whole-codebase analysis exceeding the primary model's context window (Gemini Pro specifically).
+- Whole-codebase analysis exceeding the primary model's context window (Gemini's model-dependent large context window specifically).
 
 ## Synthesis
 
@@ -29,7 +29,7 @@ Each tool is a primitive. See `primitives/tools.md` for affordances. The "primar
 
 - `claude -p "<prompt>"`: Anthropic's Claude Code. Strong general reasoning, broad tool affordances. Use as a sibling when running from Codex or Gemini.
 - `codex exec "<prompt>"`: OpenAI's Codex CLI. Available models depend on the account tier and shift over time (`codex debug models` for the live catalog). The default model lives in `~/.codex/config.toml`.
-- `gemini -p "<prompt>"`: Google's Gemini CLI. The current Pro tier (verify with `gemini --version` and the `/model` command in interactive mode) offers a 1M-token context window, extended to 2M for some configurations.
+- `gemini -p "<prompt>"`: Google's Gemini CLI. Verify the active model with `gemini --version` and the `/model` command in interactive mode. Context windows vary by model tier; check the Gemini Models page for the current limit before relying on long-context behavior.
 
 ### Model and CLI freshness
 

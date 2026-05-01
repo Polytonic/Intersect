@@ -35,7 +35,7 @@ Each AI coding CLI is a primitive that pipelines can dispatch work to. They diff
 
 ## Gemini CLI (`gemini`)
 
-- **Strengths**: 1M-2M token context window. Uniquely suited to whole-codebase analysis exceeding the primary model's context.
+- **Strengths**: Large context window, depending on the active model. Useful for whole-codebase analysis exceeding the primary model's context.
 - **Affordances**:
   - `gemini` (interactive) or `gemini -p "<prompt>"` (non-interactive).
   - `@file.md` imports in GEMINI.md (relative or absolute paths). Hierarchical context loading from cwd up to a trusted root.

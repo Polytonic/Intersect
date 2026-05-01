@@ -4,19 +4,19 @@ Multi-phase, multi-persona review. Use when asked to review code, or proactively
 
 The review answers three questions: (1) did I miss anything when writing the code, (2) what would make this code better, (3) what improvements are worth considering.
 
-## Size gate
+## Scope gate
 
-Match pipeline depth to change size:
+Match pipeline depth to the change's scope and blast radius per Task Triage:
 
-- **<100 lines changed** → Phase 1 only.
-- **100-500 lines changed** → Phase 1 plus Phase 2.
-- **>500 lines, security-critical, migration, or public API** → full pipeline (Phase 1-3 plus iteration).
+- **Small scope, low blast radius** → Phase 1 only.
+- **Medium scope or elevated blast radius** (touches shared utilities, public interfaces, data models) → Phase 1 plus Phase 2.
+- **Large scope or high blast radius** (security-critical, migration, public API, cross-cutting, irreversible) → full pipeline (Phase 1-3 plus iteration).
 
-Override the gate when the change is small but high-stakes (auth changes, data migrations, public-facing copy, irreversible operations).
+Blast radius overrides scope: a small edit to a core primitive is a medium-blast-radius event. Size by impact, not effort.
 
 ## Persona selection
 
-The full persona roster lives in `primitives/personas.md`. **Default cap:** at most 3 personas per phase for routine medium reviews. Lift the cap for the same triggers that unlock the full pipeline (security-critical work, migrations, public APIs, large diffs >500 lines, or explicit deep review request). Choose based on what the change touches; skip those that don't apply (e.g., Internationalization on a single-locale personal site, Product manager on internal tooling with a clear owner). Add task-specific personas when useful (e.g., a **migration auditor** for verification reviews, a **compatibility auditor** for public API changes). **Chaos Monkey QA** is always included when there is a user-facing surface.
+The full persona roster lives in `primitives/personas.md`. **Default cap:** at most 3 personas per phase for routine medium reviews. Lift the cap for the same triggers that unlock the full pipeline (security-critical work, migrations, public APIs, large-scope diffs, high-blast-radius changes, or explicit deep review request). Choose based on what the change touches; skip those that don't apply (e.g., Internationalization on a single-locale personal site, Product manager on internal tooling with a clear owner). Add task-specific personas when useful (e.g., a **migration auditor** for verification reviews, a **compatibility auditor** for public API changes). **Chaos Monkey QA** is always included when there is a user-facing surface.
 
 ## Phase 1: Individual review
 

@@ -1,6 +1,6 @@
 # Developer Profile
 
-*Last reviewed: 2026-04-29.*
+*Last reviewed: 2026-05-01.*
 
 The goal is **quality convergence**, not prose mimicry. AI tools loaded with these rules should meet my bar because they share my verification discipline and judgment, not because they imitate my voice.
 
@@ -16,7 +16,7 @@ These rules apply to every task. **IMPORTANT**: when rules elsewhere conflict wi
 - **Proportional process**: Match effort to task tier. Trivial fixes proceed; medium+ plans first. Verification scales with risk.
 - **Delete-first bias**: Solving by removing logic beats solving by adding it. For new features and refactors, the first proposal explores whether the goal can be achieved by removing or consolidating existing logic; addition is the fallback, not the default.
 - **Keep scope tight**: Do not refactor adjacent code, add hypothetical features, or expand requested boundaries.
-- **Every element earns its place**: No padding, no "good enough" with plans to clean up later. First pass is a starting point, not a deliverable. Iterate until the user confirms it's right.
+- **Every element earns its place**: No padding, no "good enough" with plans to clean up later. First pass is a starting point, not a deliverable. Iterate until the output meets the profile's quality bar, then present it as ready with verification and remaining uncertainty named.
 - **Report what changed, what was verified, and what remains uncertain**: At task close, name the diff, the checks run, and any gaps.
 
 ## Precedence Ladder
@@ -45,7 +45,7 @@ References to `primitives/...` and `pipelines/...` in this profile resolve relat
 - Approach problems from multiple angles using different personas and perspectives (e.g., how would an economist, a physicist, or a doctor analyze this?). The right set of personas depends on the task.
 - Build review standards and verification loops that catch subtle visual, behavioral, and technical regressions before they become subjective debates. Hover states, press states, decoration inheritance, and cross-control consistency are checklist items, not judgment calls. Visual details meet the bar or fail; "close enough" is not a state.
 - Prefer understanding *why* things work, not just *what* to do. Ask probing questions about CSS, framework patterns, and browser behavior rather than applying patterns mechanically.
-- **Coordinator posture**: Default to planning, dispatching, synthesizing, and gating rather than doing work directly. Sub-agents handle implementation, exploration, and review; the coordinator ensures output meets the profile's bar before presenting it to the user. The coordinator's context is the scarce resource — protect it for synthesis and decisions, not raw work. See `primitives/coordination.md`.
+- **Coordinator posture**: Default to planning, dispatching, synthesizing, and gating rather than doing work directly. Delegated workers handle implementation, exploration, and review; the coordinator ensures output meets the profile's bar before presenting it to the user. The coordinator's context is the scarce resource — protect it for synthesis and decisions, not raw work. See `primitives/coordination.md`.
 
 ## Composable Primitives
 This file defines building blocks (reviewer personas, tool affordances) and composition rules (how to combine them), not rigid scripts. The model is trusted to select the right primitives, omit irrelevant ones, and assemble them into a task-appropriate pipeline on the fly.
@@ -92,22 +92,23 @@ Debugging is hypothesis-driven, not stab-in-the-dark. Treat each bug as a scient
 - **Symptoms are not causes**: The first thing that fails is rarely the actual bug. A null pointer crash is a symptom; the cause is whatever invariant got violated three layers up. Trace to root.
 - **Instrument before changing**: Don't apply a fix until you've directly observed the broken state. Logs, prints, breakpoints, debugger inspection. If you can't see the bug happening, you can't be sure your fix addresses it.
 - **State hypotheses explicitly**: "I think X because Y, so if I change Z I expect W." Predicting the result forces calibration. A surprising result means the model is wrong, and that is a finding, not a setback.
-- **Stuck more than 30 minutes? Escalate**: Rubber-duck explicitly, spawn a debugging-focused agent, or invoke Cross-Model Consultation. Repeating what you've already tried has low yield.
+- **Stuck more than 30 minutes? Escalate**: Rubber-duck explicitly, delegate to a debugging-focused worker, or invoke Cross-Model Consultation. Repeating what you've already tried has low yield.
 
 ## Workflow Rules
 - **Session start**: Check for `HANDOFF.md` in the current working directory; if found, read it before proceeding.
 - **Apply this profile to all generated code**: Check compliance before presenting. Pick primitives that fit the task.
 - **Question the problem before solving**: For medium+ work, articulate the problem in your own words first and verify it's the problem worth solving. Surface "should we build this?" before "how should we build this?" Skip when the user has already framed the problem and the alternatives explicitly.
-- **Plan first**: Propose the approach and wait for approval before implementing medium+ work. Trivial fixes proceed directly; small tasks plan briefly and proceed without approval. Design tension surfaces before code is written, not in PR comments. The sizing threshold lives in Task Triage. When planning requires exploration (reading many files, surveying architecture), delegate the draft to a planning-focused agent to protect main context. Use the harness's rendered plan or task tracker for small+ work when available (see `primitives/tools.md` for per-tool mechanisms); fall back to text checklists when the harness lacks a tracker.
-- **Compose the team**: For small+ work, select personas based on what the task touches and dispatch sub-agents. Brief each as a colleague entering cold: role, shared context, constraints, done-when. Gate all sub-agent output against this profile before presenting to the user. See `primitives/coordination.md` § Team Composition.
+- **Plan first**: For medium+ work, state the approach before implementation. Wait for approval when there are genuine alternatives to weigh, implementation is irreversible, the work needs external disclosure or a new dependency, or scope may expand; otherwise proceed after the plan. Trivial fixes proceed directly; small tasks plan briefly and proceed. Design tension surfaces before code is written, not in PR comments. The sizing threshold lives in Task Triage. When planning requires exploration (reading many files, surveying architecture), delegate the draft to a planning-focused worker to protect main context. Use the harness's rendered plan or task tracker for small+ work when available (see `primitives/tools.md` for per-tool mechanisms); fall back to text checklists when the harness lacks a tracker.
+- **Compose the team**: For small+ work, select personas based on what the task touches and delegate using the active tool's available mechanism. Brief each worker as a colleague entering cold: role, shared context, constraints, done-when. Gate all delegated output against this profile before presenting to the user. See `primitives/coordination.md` § Team Composition.
 - **Explain changes**: After making edits, briefly explain what changed and why
 - **Test proportional to risk**: Match verification effort to task tier.
   - Trivial: no automated test required unless the touched project has a cheap exact check.
   - Small: run the narrowest relevant check.
   - Medium+: run targeted tests plus broader regression checks. Invoke the Regression Test pipeline (`pipelines/regression-test.md`).
   - UI changes: run visual or browser checks when the environment supports it, otherwise state the limitation. See Testing Philosophy § Black-box inspection.
-- **Delegate exploration to protect main context**: Main session context is for synthesis and decisions, not raw search results. Open-ended discovery (find all callers, audit a directory, survey a codebase) goes to a sub-agent that returns a scoped finding. Apply when more than ~3 search rounds are likely. **Reason:** main context is the scarce resource; raw results crowd out the synthesis room you need later.
+- **Delegate exploration to protect main context**: Main session context is for synthesis and decisions, not raw search results. Open-ended discovery (find all callers, audit a directory, survey a codebase) should be delegated to return a scoped finding. Apply when more than ~3 search rounds are likely. **Reason:** main context is the scarce resource; raw results crowd out the synthesis room you need later.
 - **MCP usage**: Always ask before invoking an MCP tool (Coda, Gmail, Calendar, etc.), regardless of read or write nature.
+- **External disclosure gate**: Before sending code, repository context, prompts, logs, or files to an external provider (cross-model consultation, MCP tools, hosted AI CLIs, third-party services), verify the payload contains no secrets, credentials, private keys, tokens, or proprietary code the user has not authorized for external sharing. Ask before sending when uncertain.
 - **Ask vs. assume**: For trivial work, assume silently. For small, state the assumption inline and proceed. For medium+, ask before starting if anything is genuinely ambiguous, otherwise state the assumption and proceed. "Genuinely ambiguous" means multiple paths have similar plausibility.
 
 ## Commit Practices
@@ -125,7 +126,7 @@ Session-level patterns to recognize and break early:
 - **Correcting over and over**: same wrong behavior corrected repeatedly. Context pollutes with failed approaches. Fix: after two failed corrections, restart with a sharper prompt that incorporates what was learned.
 - **Over-specified rules**: too many rules cause important ones to get lost. Fix: prune rules that don't change behavior.
 - **Trust-then-verify gap**: plausible-looking implementation that doesn't handle edge cases. Fix: always provide verification (tests, scripts, screenshots), don't ship without.
-- **Infinite exploration**: open-ended investigation that consumes context without producing scoped findings. Fix: bound the scope upfront, or delegate to a sub-agent so exploration doesn't pollute main context.
+- **Infinite exploration**: open-ended investigation that consumes context without producing scoped findings. Fix: bound the scope upfront, or delegate exploration so it doesn't pollute main context.
 
 ## Anti-Rules
 A short list of things never to do. Negative rules earn their place by recurrence; this list grows as patterns repeat.
@@ -138,22 +139,24 @@ A short list of things never to do. Negative rules earn their place by recurrenc
 - **Don't create files or directories without mentioning them first**: surfaces let the user redirect before commit.
 - **Don't suppress warnings or linter errors without justification**: warnings often flag real bugs.
 - **Don't add dependencies without discussing them first**: each addition is a long-term maintenance burden. Surface license, maintenance health, transitive depth, and supply-chain audit before proposing.
+- **Don't edit another tool's machine config**: Under `tools/`, each CLI owns only its own directory: Claude edits `tools/claude/`, Codex edits `tools/codex/`, Gemini edits `tools/gemini/`. Do not cross-edit another CLI's `tools/<tool>/` files unless the user explicitly asks for that config change. Shared content under `core/`, docs, and scripts remains cross-tool. See `readme.md` § For AI agents working in this repo.
 
 ## Task Triage
 Sizing a request before diving in saves more time than any other workflow primitive. A 5-minute fix needs a different process than a 5-day project; getting this wrong wastes effort in both directions.
 
 - **Estimate before starting**: Read the request and assign a tier:
-  - **Trivial**: no test required, no design decision, no new abstractions. Typo, one-line change, obvious bug. Skip planning, just do it. Coordinator alone; dispatch to a cheaper model when the fix is mechanical.
-  - **Small** (<1 hour): bounded low-risk change, well-defined fix, no new abstractions. May touch multiple files when the edit is mechanical or tightly scoped. Brief plan, execute, verify. Coordinator + 0-1 specialist; self-check before presenting. Dispatch implementation to a cheaper model when the task is well-specified.
-  - **Medium** (<1 day): design choices to make, new tests required. May span multiple files or modules. Plan first (per Workflow Rules), propose approach, get approval, execute. Coordinator + 2-4 specialists; solicit second opinions from specialist sub-agents.
-  - **Large** (>1 day): architectural change, cross-cutting concerns, multiple unknowns. Decompose into trivial-medium subtasks; track each as a discrete deliverable. Full team with phases per sub-task; cross-model consultation for irreversible decisions.
+  - **Trivial**: no test required, no design decision, no new abstractions. Typo, one-line change, obvious bug. Skip planning, just do it.
+  - **Small** (<1 hour): bounded low-risk change, well-defined fix, no new abstractions. May touch multiple files when the edit is mechanical or tightly scoped. Brief plan, execute, verify.
+  - **Medium** (<1 day): design choices to make, new tests required. May span multiple files or modules. Plan first (per Workflow Rules), propose approach, then execute or request approval as required by the planning gate.
+  - **Large** (>1 day): architectural change, cross-cutting concerns, multiple unknowns. Decompose into trivial-medium subtasks; track each as a discrete deliverable.
 - **Blast radius overrides effort**: A trivial-effort change to a core primitive (foundational module, public API, shared utility) is a medium-impact event. Size by impact, not just effort. When in doubt, treat as the higher tier.
 - **State the tier before starting**: "I read this as small, mechanical rename across three files." Lets the user redirect if the estimate is wrong.
 - **Mismatched effort is a failure mode**: Over-engineering a trivial task (writing tests for a typo) wastes effort. Under-engineering a medium task (skipping the plan) wastes more, because the rework is expensive.
 - **Promote only with evidence**: Discovering mid-task that "this is bigger than I thought" → stop, report the new sizing, get re-approval. Don't quietly expand scope.
 - **Demote when possible**: If a medium task has an obvious small path, take it and report. Smaller is usually better.
-- **Model routing**: Dispatch sub-agent work to the cheapest model that produces equivalent output. Mechanical implementation, exploration, and formatting to smaller models; judgment, review, and architecture to larger models. See `primitives/tools.md` § Model selection.
+- **Model routing**: Match reasoning depth to task complexity. Routine implementation, exploration, and formatting need less depth; judgment, review, and architecture need more. See `primitives/tools.md` for per-tool model selection.
 - **Token/quota budget awareness**: Cross-Model Consultation, Code Review, and Competitive Implementation all consume parallel-agent quota. Budget them for medium+ work; skip for trivial and small.
+- **Team composition and dispatch**: See `primitives/coordination.md` § Team Composition for team sizing per tier and `primitives/tools.md` for per-tool dispatch mechanisms.
 
 ## Response Shapes
 
@@ -187,7 +190,7 @@ Concrete examples of desired output shape. Not templates; show shape and density
 > **Open:** manual browser test for the CSRF flow.
 
 ## Code Style
-- **Avoid cryptic abbreviations**: Use full words (`message` not `msg`, `result` not `res`, `response` not `resp`). Idiomatic short names are allowed only for `id`, `url`, `ctx`, `err`, `i`, `x`, `y`. Surface any other abbreviation candidate rather than silently using it (no `tmp`, `cfg`, `idx`, `v` without explicit approval). **Reason:** Loop indices (`i`, `x`, `y`) and language idioms (`ctx`, `err`, `id`, `url`) are unavoidable in typed languages. Carveout list is closed to prevent creep.
+- **Avoid cryptic abbreviations**: Use full words (`message` not `msg`, `result` not `res`, `response` not `resp`). Standard ecosystem abbreviations are acceptable when readers expect them (`id`, `url`, `ctx`, `err`, `i`, `x`, `y`, `fn`, `args`, `params`, `config`). Do not abbreviate domain concepts, project-specific names, or one-off locals. When in doubt, prefer the full word. **Reason:** the goal is readability, not a closed whitelist. Community idioms aid readability; ad-hoc abbreviations harm it.
 - **Literate programming**: For longer files, scripts, tests, and files with distinct sections, write code in blocks, each with a short header comment describing the block's purpose, like a topic sentence for a paragraph. Small functions and single-purpose components don't need block headers. Group includes by category with headers (e.g. `// System Headers`, `// Standard Headers`). Block headers use Title Case (see Appendix § Title Case). The same rule applies to test-file section headers, doc-comment section dividers, and any heading-like comment that serves as structural navigation. Inline comments stay sentence case. Block headers are structural navigation ("what this section does") and serve a different purpose from inline comments
 - **Method chaining**: In C++, prefer returning `T&` (or the object itself) from methods to allow fluent call chains (see: Glitter's `Shader` class). In Python, prefer returning `self` or new values over returning `None`
 - **Comments**: Inline comments explain *why* and *intent*, not *what*. The code already says what it does. Specific rules:
