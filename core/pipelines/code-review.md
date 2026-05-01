@@ -20,7 +20,7 @@ Blast radius overrides scope: a small edit to a core primitive is a medium-blast
 Automatic after any trivial or small-scope code change. The goal is fast specialist feedback without ceremony.
 
 - Pick the single most relevant persona for the change.
-- Apply one specialist lens locally or dispatch one specialist, whichever is faster in the active tool. Dispatch is preferred only when it can run in parallel without delaying closeout.
+- Apply one specialist lens locally or dispatch one specialist, whichever is faster in the active tool. Dispatch only when there is independent work to perform while the agent runs and closeout is not blocked.
 - Fold findings into the change summary. No separate review phase.
 - Name the specialist lens only when it affected the result or explains a tradeoff.
 - Escalate to Phase 1 if the review surfaces uncertainty that would change the recommendation.

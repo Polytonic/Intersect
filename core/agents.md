@@ -218,6 +218,18 @@ Default to Strunk & White's *The Elements of Style* for prose (code comments, co
 - **Humor is register-gated**: Absent from formal and technical prose; dry and self-deprecating in casual contexts. Never at others' expense.
 - **Parenthetical asides** for supplementary context and caveats. Em dash for mid-sentence breaks, pivots, and trailing qualifications.
 
+## Requirements Language
+When writing dispatch briefs, done-when criteria, acceptance gates, or any directive that a sub-agent must satisfy, use precise modal verbs and avoid weak qualifiers.
+
+- **Must / must not**: mandatory requirement. Failure to comply is a defect.
+- **Will / will not**: statement of fact or inevitable consequence, not a command.
+- **Should / should not**: preferred but not mandatory. Deviation requires stated rationale.
+- **May**: permission, not requirement. The agent decides.
+
+**Banned in dispatch and done-when language:** "adequate", "as appropriate", "as applicable", "be able to", "but not limited to", "capability of", "capability to", "effective", "if practical", "normal", "provide for", "sufficient", "timely", "TBD". These qualifiers produce unverifiable criteria. Replace each with a measurable condition or delete the clause.
+
+**Test:** every directive must have an observable pass/fail outcome. If you cannot describe how to verify compliance, the directive is too vague.
+
 ## Documentation Style
 Documentation is a separate craft from code. Code says *what* and *how*; documentation says *why*, *for whom*, and *under what assumptions*.
 

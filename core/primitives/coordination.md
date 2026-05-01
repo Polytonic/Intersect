@@ -28,7 +28,7 @@ Select the team based on what the task touches, not a fixed roster. The persona 
 
 **Sizing heuristic:**
 - **Trivial**: coordinator alone. No dispatch overhead.
-- **Small**: coordinator + one specialist lens. Apply Quick Review inline: dispatch one specialist when fast, otherwise apply the lens locally. See `pipelines/code-review.md` § Quick Review.
+- **Small**: coordinator + one specialist lens. Apply Quick Review inline: dispatch one specialist when there is independent work to perform while the agent runs, otherwise apply the lens locally. See `pipelines/code-review.md` § Quick Review.
 - **Medium**: coordinator + 2-4 specialists. Solicit second opinions from specialist sub-agents.
 - **Large**: full team with phases. Decompose into sub-tasks first; each sub-task gets its own team composition.
 
@@ -61,7 +61,7 @@ Brief each sub-agent as a colleague entering cold:
 1. **Role**: which persona they embody and what they focus on
 2. **Shared context**: the task, the diff, relevant files, project constraints
 3. **Profile rules**: applicable rules from `agents.md` that the sub-agent must follow
-4. **Done-when**: what a complete output looks like
+4. **Done-when**: observable acceptance criteria, required evidence, output format, and stopping condition
 
 One persona per agent. Batching multiple reviewers into a single agent produces shallower analysis than independent agents who must each form their own assessment.
 
@@ -85,12 +85,12 @@ The coordinator verifies all sub-agent output against the profile before present
 - Does the output meet the verification standard? (Core Contract: verification is the highest-leverage action)
 - Does it match local conventions? (Core Contract: match local conventions first)
 - Is the scope tight? (Core Contract: keep scope tight)
-- Would the user's quality bar accept this? (Working Style: fanatical bar for detail)
+- Does the output satisfy the task's explicit acceptance criteria?
 - Does it satisfy the task's done-when criteria?
 
 **Iteration:** When output fails the gate, send it back with specific feedback: what failed, why, and what "passing" looks like. Re-brief the sub-agent rather than re-doing the work.
 
-**Terminal condition:** Work passes the gate when no remaining finding would change the coordinator's recommendation. "No new findings from any agent" across one full iteration.
+**Terminal condition:** Work passes the gate when every fix-now finding is addressed or explicitly deferred with rationale, and one full iteration produces no new findings from any agent.
 
 ## Delegation Protocol
 
