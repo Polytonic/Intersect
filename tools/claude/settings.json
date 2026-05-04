@@ -1,7 +1,13 @@
 {
-  "syntaxHighlightingDisabled": false,
-  "effortLevel": "max",
   "enabledPlugins": {
     "swift-lsp@claude-plugins-official": true
+  },
+  "syntaxHighlightingDisabled": false,
+  "model": "claude-opus-4-6",
+  "statusLine": {
+    "type": "command",
+    "command": "zsh \"$(dirname \"$(readlink \"$HOME/.claude/settings.json\")\")/statusline.sh\"",
+    "refreshInterval": 30000,
+    "padding": 0
   }
 }
