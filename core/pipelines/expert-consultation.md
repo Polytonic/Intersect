@@ -2,17 +2,19 @@
 
 Single-specialist dispatch. Use when a question touches a specific framework, library, language feature, security concern, architecture decision, or other domain with clear subject-matter expertise. Apply the relevant specialist perspective *before* answering.
 
-The personas (`primitives/personas.md`) are not just for formal code review. They are primitives any pipeline can use.
+The personas (`core/primitives/personas.md`) are not just for formal code review. They are primitives any pipeline can use.
 
 ## Trigger
 
 - Scan the question for domain signals (framework name, language feature, security topic, architecture pattern, etc.). Pick the personas that fit: framework expert, language expert, security reviewer, architect, technical writer, whichever are load-bearing for the question.
-- **Speculative phrasing is a strong trigger**: "I wonder", "maybe", "perhaps", "what if", "I'm thinking" are invitations for opinion. Spawn the relevant specialist persona before answering, especially for design or architecture questions. See `agents.md` § Communication Style.
+- **Speculative phrasing is a strong trigger**: "I wonder", "maybe", "perhaps", "what if", "I'm thinking" are invitations for opinion. Consult the relevant specialist persona before answering, especially for design or architecture questions. This follows the `core/agents.md` communication rule that speculative phrasing asks for a recommendation.
+- **User lens is mandatory** for every advisory, review, or discussion task.
+- If the answer requires workspace modification, leave this advisory path and use the implementation delegation protocol in `core/agents.md`.
 
 ## Execution
 
-- **Default:** apply the relevant persona locally as an inline review lens. Name the lens when it changes the recommendation or explains a tradeoff.
-- **External dispatch:** spawn the persona as a separate worker for medium+ work, when uncertainty blocks the recommendation, or when the user authorizes it. Spawn independent personas in parallel when dispatch is justified. See `primitives/tools.md` for tool-specific dispatch mechanisms.
+- **Read-only default:** use the relevant persona as a local lens. Name the lens when it changes the recommendation or explains a tradeoff.
+- **External dispatch:** spawn the persona as a separate worker for medium+ advisory work, when uncertainty blocks the recommendation, or when the user authorizes it. Spawn independent personas in parallel when dispatch is justified. See `core/primitives/tools.md` for tool-specific dispatch mechanisms.
 
 ## Synthesis
 

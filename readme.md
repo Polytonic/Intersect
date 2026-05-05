@@ -28,25 +28,34 @@ intersect <command>
 
 ```
 core/                                # universal markdown content
-├── agents.md                        # main preferences (loaded by all CLIs)
-├── claude.md                        # Claude wrapper (top-level @imports)
+├── agents.md                        # coordinator profile entrypoint
+├── claude.md                        # Claude wrapper (@-imports core/agents.md only)
+├── styles/
+│   ├── implementation.md            # coding, testing, debugging, formatting
+│   └── prose.md                     # copy, writing, documentation style
 ├── primitives/
 │   ├── personas.md                  # reviewer/expert roster
-│   └── tools.md                     # claude/codex/gemini affordances
+│   ├── tools.md                     # claude/codex/gemini affordances
+│   ├── coordination.md              # multi-agent team patterns
+│   └── interaction-design.md        # UI behavior, accessibility
 └── pipelines/
     ├── code-review.md               # multi-phase persona review
     ├── expert-consultation.md       # single specialist dispatch
     ├── competitive-implementation.md  # divergent then converge ("red/blue")
     ├── cross-model-consultation.md  # Codex/Gemini second opinion
-    └── regression-test.md           # automated checks after code-modifying changes
+    ├── regression-test.md           # automated checks after code-modifying changes
+    └── maintenance.md               # session-end capture and handoff
 
 tools/                               # per-CLI machine config
-├── claude/settings.json
+├── claude/
+│   ├── settings.json
+│   └── statusline.sh
 ├── codex/config.toml
 └── gemini/settings.json
 
 bin/
-└── intersect                        # CLI
+├── intersect                        # CLI
+└── verify-ai.sh                     # live, opt-in AI config verification
 ```
 
 ## Symlink map
@@ -64,6 +73,16 @@ bin/
 
 All runtime state (sessions, history, sqlite, caches, auth tokens) stays put in each tool's config directory. Nothing here touches it.
 
+## Claude statusline
+
+`tools/claude/statusline.sh` renders compact usage bars:
+
+```text
+Claude 5h [###-----] 39% 7d [#-------] 15% | Codex D [##------] 25% W [##------] 20%
+```
+
+Claude percentages come from Claude Code's statusline payload when rate-limit data is present. Codex percentages use `@ccusage/codex` cost data against explicit budgets: set `CODEX_DAILY_BUDGET_USD` and `CODEX_WEEKLY_BUDGET_USD` in the Claude environment. The weekly Codex bar is trailing seven calendar days. Without those budgets, Codex prints `--%` instead of inventing a denominator. The Codex report is cached for 300 seconds by default.
+
 <details>
 <summary><strong>Why lowercase repo files?</strong></summary>
 
@@ -74,19 +93,25 @@ Two reasons, one aesthetic and one technical:
 
 </details>
 
-## Primitives and pipelines
+## Styles, primitives, and pipelines
 
-The repo treats reusable building blocks (personas, tools) as **primitives** and composed workflows (code review, competitive implementation, etc.) as **pipelines**. `core/agents.md` is the entry point. It indexes both directories.
+The repo has three referenced layers below `agents.md`:
 
-Adding a new pipeline: create `core/pipelines/<name>.md` describing trigger, steps, and synthesis. Reference any primitives it uses by path. Update `core/agents.md` § Pipelines to list it.
+- **Styles** (`core/styles/`): implementation and prose rules loaded by the agent when a task calls for them.
+- **Primitives** (`core/primitives/`): reusable building blocks (personas, tools, coordination patterns) loaded when the File Map or a brief names them.
+- **Pipelines** (`core/pipelines/`): composed workflows loaded when the File Map or the task trigger points to them.
 
-Adding a new primitive: create `core/primitives/<name>.md`. Update `core/agents.md` § Primitives to list it. Pipelines reference primitives by path.
+`core/agents.md` is the shared entry point. Its File Map indexes all three directories. Paths in briefs and docs should be repo-root relative, unless a quoted source says otherwise.
+
+Adding a new pipeline: create `core/pipelines/<name>.md` describing trigger, steps, and synthesis. Reference any primitives it uses by path. Update the File Map in `core/agents.md` to list it.
+
+Adding a new primitive: create `core/primitives/<name>.md`. Update the File Map in `core/agents.md`. Pipelines reference primitives by path.
 
 ## Tool compatibility notes
 
-- **Claude Code** reads `~/.claude/CLAUDE.md` and resolves `@import` paths relative to the importing file. Top-level imports work reliably; transitive imports inside an imported file are less predictable, so `core/claude.md` imports `agents.md`, `primitives/personas.md`, and `primitives/tools.md` at the top level. Pipeline files load lazily (model reads them on demand).
-- **Codex CLI** reads `~/.codex/AGENTS.md`. No `@import` syntax. The model reads referenced files on demand when it begins matching work.
-- **Gemini CLI** reads `~/.gemini/GEMINI.md` by default. Supports `@file.md` imports (relative or absolute). Hierarchical context loading from cwd up to a trusted root.
+- **Claude Code** reads `~/.claude/CLAUDE.md` and resolves `@import` paths relative to the importing file. `core/claude.md` imports only `@./agents.md` at startup. Styles, primitives, and pipelines are referenced by the File Map and loaded by the agent when needed.
+- **Codex CLI** reads `~/.codex/AGENTS.md`. No `@import` syntax. Styles, primitives, and pipelines are referenced by the File Map and loaded by the agent when needed.
+- **Gemini CLI** reads `~/.gemini/GEMINI.md` by default. Supports `@file.md` imports (relative or absolute). This repo links Gemini to `core/agents.md`; styles, primitives, and pipelines are referenced by the File Map and loaded by the agent when needed.
 
 ## Verifying the setup
 
@@ -108,9 +133,16 @@ bash bin/test.sh
 
 Sandboxed in a temp `HOME` so it never touches your real `~/.claude` etc. Exercises the install/uninstall/link/unlink/doctor logic deterministically. Run after any change to `bin/intersect`. Exits non-zero on failure.
 
-### 3. End-to-end with the AI tools
+### 3. Live AI config pickup (`bin/verify-ai.sh`)
 
-The most truthful check: do the CLIs actually load the symlinked configs? See [`test.md`](test.md) for the AI-runnable verification commands and the directive AI agents should follow when editing this repo.
+```sh
+bin/verify-ai.sh
+bin/verify-ai.sh codex
+```
+
+Opt-in provider-backed smoke checks for Claude, Codex, and Gemini. The script runs from a temp directory outside this repo and checks that each selected CLI can see the linked global config in another project context. It skips tools that are not installed. Do not run this in CI or pre-commit.
+
+See [`test.md`](test.md) for the executable check and manual command table.
 
 ## For AI agents working in this repo
 

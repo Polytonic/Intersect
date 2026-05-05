@@ -1,6 +1,6 @@
 # Personas
 
-Reviewer/expert primitives used by pipelines. Pipelines that need reviewer or expert input draw from this roster; see `pipelines/` for which pipelines invoke which personas. Not every pipeline run needs every persona; select based on what the work touches.
+Reviewer/expert primitives used by pipelines. Pipelines that need reviewer or expert input draw from this roster; see `core/pipelines/` for which pipelines invoke which personas. Not every pipeline run needs every persona; select based on what the work touches.
 
 **Project-local "Key contributions":** When a persona earns concrete wins on a specific project, capture them in that project's local CLAUDE.md, AGENTS.md, or GEMINI.md, not here. Format: a short bullet noting what was caught and why it mattered. The global roster stays portable; project-local files carry the receipts and the war stories.
 
@@ -28,19 +28,22 @@ Readability, confusing patterns, tribal knowledge, unclear control flow.
 Injection, data exposure, trust boundaries, supply chain, multi-user risks.
 
 **Accessibility specialist**
-ARIA attributes, screen reader behavior, focus management, contrast ratios, target sizes, keyboard navigation. Load `primitives/interaction-design.md` for the rule set.
+Flags usability risks involving ARIA attributes, screen reader behavior, focus management, contrast ratios, target sizes, and keyboard navigation. Recommendations are advisory unless the task or applicable standard makes them acceptance criteria. Load `core/primitives/interaction-design.md` for the rule set.
 
-**Developer profile**
-Check code against the preferences in `agents.md`.
+**Coordinator profile**
+Check output against `core/agents.md` Core Contract and the relevant style file (`core/styles/implementation.md` for code, `core/styles/prose.md` for text).
+
+**User lens**
+Apply the user's stated goals, constraints, deployment assumptions, and preferences. This lens is mandatory for every review, advisory, or discussion task.
 
 **Architect**
 System boundaries, separation of concerns, scaling implications, dependency direction, whether the design supports planned evolution (e.g., from CLI to service).
 
 **UI/UX designer**
-Evaluates visual hierarchy, information flow, spacing, color usage, and interaction patterns. Focuses on whether the tool "reads" correctly: do users' eyes flow from input to output naturally? Load `primitives/interaction-design.md` for the rule set.
+Evaluates visual hierarchy, information flow, spacing, color usage, and interaction patterns. Focuses on whether the tool "reads" correctly: do users' eyes flow from input to output naturally? Load `core/primitives/interaction-design.md` for the rule set.
 
 **Visual consistency auditor**
-Pixel-level design system compliance. Audits every font size, weight, color, radius, and gap against the documented system. Catches drift and undocumented one-off values. Load `primitives/interaction-design.md` for the rule set.
+Pixel-level design system compliance. Audits every font size, weight, color, radius, and gap against the documented system. Catches drift and undocumented one-off values. Load `core/primitives/interaction-design.md` for the rule set.
 
 **Performance auditor**
 Bundle size, runtime cost, query count, memory ceiling, render budget. Catches N+1 queries, unbounded loops, oversized payloads, blocking I/O on hot paths. Demands measurements, not intuition.
@@ -72,7 +75,7 @@ Challenges fundamental assumptions. Questions whether features earn their comple
 ## Always-on (when there is a user-facing surface)
 
 **Chaos Monkey QA**
-Walks through every reachable state as a user, computes pixel budgets at mobile viewports (375px/390px/768px), tests edge cases visually rather than by code inspection. Load `primitives/interaction-design.md` for the rule set.
+Walks through every reachable state as a user, computes pixel budgets at mobile viewports (375px/390px/768px), tests edge cases visually rather than by code inspection. Load `core/primitives/interaction-design.md` for the rule set.
 
 ## Task-specific examples
 

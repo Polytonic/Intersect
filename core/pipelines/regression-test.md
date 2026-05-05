@@ -2,6 +2,8 @@
 
 Run after any code-modifying change to catch breakage before declaring done. Cheap insurance: catches things that "looked right" but aren't.
 
+This pipeline owns check discovery and execution. `core/agents.md` owns the acceptance gate.
+
 ## Trigger
 
 Any task that modifies code, config, or content where the project has automated checks. Run before declaring the task complete. Skip only when there is no test surface (pure docs change in a repo with no tests).
@@ -25,9 +27,9 @@ Run the discovered checks. Run in parallel where they do not share state. Captur
 
 Categorize each failure:
 
-- **Regression** (passed before this change, fails now): caused by the work just done. Fix before declaring done.
+- **Regression** (passed before this change, fails now): caused by the work just done. Dispatch a fix before declaring done.
 - **Pre-existing failure** (unrelated to the change): note it, surface to the user, do not silently ignore.
-- **Expected change** (test asserted old behavior, change intentionally alters it): update the test, do not weaken the assertion.
+- **Expected change** (test asserted old behavior, change intentionally alters it): dispatch the test update, do not weaken the assertion.
 
 Do not rerun until green. A flaky test passing on retry is not the same as a fixed test; investigate the flake.
 
@@ -37,8 +39,8 @@ Report:
 
 - Pass/fail counts per check type.
 - What failed and why (regression / pre-existing / expected).
-- If regressions remain, the task is not done; return to fixing.
-- If only pre-existing failures remain, the task is done but flag the pre-existing failures explicitly.
+- If regressions remain, checks failed; dispatch fixes before requesting acceptance.
+- If only pre-existing failures remain, report them explicitly so the coordinator can decide whether the gate passes.
 
 ## When to skip
 

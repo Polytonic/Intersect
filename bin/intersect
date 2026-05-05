@@ -326,6 +326,7 @@ doctor_check_repo_files() {
   mapfile -t repo_files < <(cd "$REPO_DIR" && find core -name '*.md' -type f | sort)
   repo_files+=(
     "tools/claude/settings.json"
+    "tools/claude/statusline.sh"
     "tools/codex/config.toml"
     "tools/gemini/settings.json"
   )

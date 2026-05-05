@@ -5,7 +5,7 @@ Spawn parallel queries to other model providers when the primary model alone mig
 ## Trigger
 
 - Irreversible architecture decisions where being wrong is expensive.
-- Security-critical code review (independent trainings catch different threat patterns).
+- Security-critical code review (model independence catches different threat patterns).
 - Stuck on debugging for more than 30 minutes.
 - Validating a non-obvious technical claim before acting on it.
 - Whole-codebase analysis exceeding the primary model's context window (Gemini's model-dependent large context window specifically).
@@ -25,7 +25,7 @@ Spawn parallel queries to other model providers when the primary model alone mig
 
 ### Sibling CLIs
 
-Each tool is a primitive. See `primitives/tools.md` for affordances. The "primary" CLI is whichever you are running; the others are siblings to consult. Verify availability with `which <name>` first.
+Each tool is a primitive. See `core/primitives/tools.md` for affordances. The "primary" CLI is whichever you are running; the others are siblings to consult. Verify availability with `which <name>` first.
 
 - `claude -p "<prompt>"`: Anthropic's Claude Code. Strong general reasoning, broad tool affordances. Use as a sibling when running from Codex or Gemini.
 - `codex exec "<prompt>"`: OpenAI's Codex CLI. Available models depend on the account tier and shift over time (`codex debug models` for the live catalog). The default model lives in `~/.codex/config.toml`.
