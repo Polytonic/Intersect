@@ -103,13 +103,17 @@ The repo has three referenced layers below `agents.md`:
 - **Primitives** (`core/primitives/`): reusable capabilities and lenses, loaded when the File Map or a brief names them.
 - **Pipelines** (`core/pipelines/`): composed workflows loaded when the File Map or the task trigger points to them.
 
-`core/agents.md` is the shared entry point. Its File Map indexes all three directories. Paths in briefs and docs should be repo-root relative, unless a quoted source says otherwise.
+`core/agents.md` is the shared entry point. Its File Map indexes all three directories.
 
-Adding a new pipeline: create `core/pipelines/<name>.md` describing trigger, steps, and synthesis. Reference any primitives it uses by path. Update the File Map in `core/agents.md` to list it.
+Use `profile:<path>` for Intersect-owned styles, primitives, and pipelines. Use `workspace:<path>` for target project files.
 
-Adding a new style: create `core/styles/<name>.md` describing the standard and when to load it. Update the File Map and Style File Loading list in `core/agents.md`.
+The active profile root is the parent directory of the `core/` directory that contains the loaded profile file. Unprefixed paths in user briefs refer to the active workspace unless the brief explicitly sets another root. If the active profile root cannot be located, stop and ask. Do not fall back to the workspace root.
 
-Adding a new primitive: create `core/primitives/<name>.md`. Update the File Map in `core/agents.md`. Pipelines reference primitives by path.
+Adding a new pipeline: create `profile:core/pipelines/<name>.md` describing trigger, steps, and synthesis. Reference primitives by `profile:<path>`. Update the File Map in `profile:core/agents.md` to list it.
+
+Adding a new style: create `profile:core/styles/<name>.md` describing the standard and when to load it. Update the File Map and Style File Loading list in `profile:core/agents.md`.
+
+Adding a new primitive: create `profile:core/primitives/<name>.md`. Update the File Map in `profile:core/agents.md`. Pipelines reference primitives by `profile:<path>`.
 
 ## Tool compatibility notes
 
@@ -143,11 +147,14 @@ Sandboxed in a temp `HOME` so it never touches your real `~/.claude` etc. Exerci
 bin/verify-ai.sh
 bin/verify-ai.sh pickup codex
 bin/verify-ai.sh behavior claude
+bin/verify-ai.sh paths codex
 ```
 
 Opt-in provider-backed smoke checks for Claude, Codex, and Gemini. `pickup` checks that each selected CLI can see the linked global config from a temp directory outside this repo. `behavior` checks the nested-consultation smoke prompt with mechanical grading for required phrases and structure, including `Delegation tree`, `Worker briefs`, `Worker returns`, `Abort criteria`, `Nested consultation: Required`, `Nested consultation: Allowed`, `Consultation decision:`, `same gate dimension`, and `fails twice`.
 
-With no arguments, `bin/verify-ai.sh` runs `pickup` for all known tools. Tool selection works in both modes, for example `bin/verify-ai.sh pickup codex` and `bin/verify-ai.sh behavior claude`.
+`paths` creates a workspace decoy at `core/styles/interaction-design.md`. It then checks that `profile:core/styles/interaction-design.md` resolves to the Intersect profile file whose first H2 is `Interaction Design`.
+
+With no arguments, `bin/verify-ai.sh` runs `pickup` for all known tools. Tool selection works in every mode, for example `bin/verify-ai.sh pickup codex`, `bin/verify-ai.sh behavior claude`, and `bin/verify-ai.sh paths codex`.
 
 These checks depend on live provider access and the local CLI session state. Auth/login failures, restricted session directories, sandbox permissions, provider outages, and timeouts can fail the run before the model behavior is evaluated. The script prints classified diagnostics where practical and keeps logs preserved in the printed temp project path on failure. It removes the temp project only after full success. Do not run this in CI or pre-commit.
 

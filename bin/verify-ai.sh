@@ -4,7 +4,9 @@ set -euo pipefail
 # Configuration
 
 EXPECTED_PICKUP_MARKER="Coordinator Profile"
-KNOWN_MODES=("pickup" "behavior")
+EXPECTED_PATHS_MARKER="Interaction Design"
+DECOY_PATHS_MARKER="Workspace Decoy Path"
+KNOWN_MODES=("pickup" "behavior" "paths")
 KNOWN_TOOLS=("claude" "codex" "gemini")
 SELECTED_MODE="pickup"
 SELECTED_TOOLS=()
@@ -39,6 +41,11 @@ Every worker brief must include "Nested consultation:" with Required or Allowed.
 PROMPT
 )
 
+PATHS_PROMPT=$(cat <<'PROMPT'
+Resolve and read profile:core/styles/interaction-design.md from the active Intersect profile, not from the active workspace. Answer with only the first H2 text from that profile-owned file.
+PROMPT
+)
+
 REQUIRED_BEHAVIOR_SUBSTRINGS=(
   "Nested consultation"
   "Required"
@@ -70,7 +77,7 @@ REQUIRED_BEHAVIOR_STRUCTURES=(
 print_usage() {
   cat >&2 <<USAGE
 Usage:
-  $0 [pickup|behavior] [claude] [codex] [gemini]
+  $0 [pickup|behavior|paths] [claude] [codex] [gemini]
   $0 [claude] [codex] [gemini]
 
 Default mode is pickup. With no args, runs pickup for all known tools.
@@ -78,6 +85,7 @@ Examples:
   $0
   $0 pickup codex
   $0 behavior claude
+  $0 paths codex
 USAGE
 }
 
@@ -85,7 +93,7 @@ is_known_mode() {
   local mode="$1"
 
   case "$mode" in
-    pickup | behavior)
+    pickup | behavior | paths)
       return 0
       ;;
     *)
@@ -241,8 +249,9 @@ missing_behavior_structures() {
   printf '%s' "${missing[*]}"
 }
 
-canonical_pickup_marker_found() {
+canonical_heading_marker_found() {
   local output="$1"
+  local expected="$2"
   local line
   local normalized
 
@@ -281,12 +290,24 @@ canonical_pickup_marker_found() {
       normalized="${normalized%"${normalized: -1}"}"
     done
 
-    if [[ "$normalized" == "$EXPECTED_PICKUP_MARKER" ]]; then
+    if [[ "$normalized" == "$expected" ]]; then
       return 0
     fi
   done <<<"$output"
 
   return 1
+}
+
+canonical_pickup_marker_found() {
+  local output="$1"
+
+  canonical_heading_marker_found "$output" "$EXPECTED_PICKUP_MARKER"
+}
+
+canonical_paths_marker_found() {
+  local output="$1"
+
+  canonical_heading_marker_found "$output" "$EXPECTED_PATHS_MARKER"
 }
 
 lowercase_text() {
@@ -322,6 +343,17 @@ classify_failure() {
 
 create_temp_project() {
   TEMP_PROJECT="$(mktemp -d "${TMPDIR:-/tmp}/intersect-ai-verify.XXXXXX")"
+}
+
+create_paths_decoy() {
+  mkdir -p "$TEMP_PROJECT/core/styles"
+  printf '# Decoy\n\n## %s\n' "$DECOY_PATHS_MARKER" >"$TEMP_PROJECT/core/styles/interaction-design.md"
+}
+
+prepare_temp_project_for_mode() {
+  if [[ "$SELECTED_MODE" == "paths" ]]; then
+    create_paths_decoy
+  fi
 }
 
 cleanup_temp_project_on_success() {
@@ -425,6 +457,11 @@ tool_prompt_for_mode() {
     return
   fi
 
+  if [[ "$mode" == "paths" ]]; then
+    printf '%s' "$PATHS_PROMPT"
+    return
+  fi
+
   case "$tool" in
     claude)
       printf 'H1 of your global preferences file? Answer with only the H1.'
@@ -492,6 +529,32 @@ check_behavior_output() {
   record_pass "behavior" "$tool" "found required substrings and structure"
 }
 
+check_paths_output() {
+  local tool="$1"
+  local status="$2"
+  local output="$3"
+  local log_path="$4"
+  local reason
+
+  if [[ "$status" -ne 0 ]]; then
+    reason="$(classify_failure "$status" "$output")"
+    record_fail "paths" "$tool" "$reason" "$log_path"
+    return
+  fi
+
+  if contains_text "$output" "$DECOY_PATHS_MARKER"; then
+    record_fail "paths" "$tool" "resolved workspace decoy: $DECOY_PATHS_MARKER" "$log_path"
+    return
+  fi
+
+  if canonical_paths_marker_found "$output"; then
+    record_pass "paths" "$tool" "found profile marker: $EXPECTED_PATHS_MARKER"
+    return
+  fi
+
+  record_fail "paths" "$tool" "missing profile marker: $EXPECTED_PATHS_MARKER" "$log_path"
+}
+
 check_tool() {
   local tool="$1"
   local prompt
@@ -526,11 +589,17 @@ check_tool() {
       ;;
   esac
 
-  if [[ "$SELECTED_MODE" == "pickup" ]]; then
-    check_pickup_output "$tool" "$status" "$output" "$output_file"
-  else
-    check_behavior_output "$tool" "$status" "$output" "$output_file"
-  fi
+  case "$SELECTED_MODE" in
+    pickup)
+      check_pickup_output "$tool" "$status" "$output" "$output_file"
+      ;;
+    behavior)
+      check_behavior_output "$tool" "$status" "$output" "$output_file"
+      ;;
+    paths)
+      check_paths_output "$tool" "$status" "$output" "$output_file"
+      ;;
+  esac
 }
 
 
@@ -539,6 +608,7 @@ check_tool() {
 validate_timeout_config
 select_mode_and_tools "$@"
 create_temp_project
+prepare_temp_project_for_mode
 trap cleanup_temp_project_on_success EXIT
 
 printf 'live AI verification mode: %s\n' "$SELECTED_MODE"
