@@ -25,7 +25,9 @@ Each AI coding CLI is a primitive that pipelines can dispatch work to. They diff
 
 - **Strengths**: Different reasoning style than Claude. Often more creative or risk-tolerant. Useful as cross-model second opinion.
 - **Affordances**:
-  - `codex` (interactive) or `codex exec "<prompt>"` (non-interactive).
+  - Native subagent spawn or agent continuation when the runtime exposes them. Use these first for delegated work.
+  - `codex` interactive sessions.
+  - Fallback one-shot child CLI: `codex exec "<prompt>"` for non-interactive delegation when native dispatch is unavailable.
   - `codex review` subcommand for built-in reviews.
   - Built-in plan tracker for rendered progress tracking. Use for small+ plans.
   - Project-level + global AGENTS.md scope layering. **No `@import` syntax**. The model reads referenced files on demand.
@@ -33,6 +35,8 @@ Each AI coding CLI is a primitive that pipelines can dispatch work to. They diff
   - Configurable reasoning effort via `model_reasoning_effort` in `~/.codex/config.toml`.
   - `send_input` / `resume_agent`, when exposed by the harness, can continue a live Codex agent with coordinator-routed answers, peer findings, or revised constraints.
   - **Model selection**: Highest available model at xhigh effort for review personas, architecture, and security. Mid-tier at default effort for mechanical checks and routine implementation. Default to the cheapest model that produces equivalent output. Run `codex debug models` for the live catalog.
+- **Subagent runtime adapter**: Follow `core/agents.md` Dispatch Permission. Prefer native subagent spawn or agent continuation when the Codex runtime exposes either primitive. Codex harnesses may require a direct active-request trigger before native subagent spawning. `AGENTS.md` can record the desired policy, but does not itself satisfy that trigger. If implementation delegation is mandatory and permission is denied or unavailable, stop and report the constraint instead of implementing inline.
+- **Local evidence, 2026-05-05**: `codex features list` shows `multi_agent` enabled. `codex --help` exposes `exec`, `review`, `resume`, `fork`, and experimental `cloud`. `codex exec --help` exposes one-shot non-interactive execution and `codex exec resume`. The checked help output does not show an automatic subagent-spawn setting or an `AGENTS.md` override for explicit user-trigger policy.
 - **Memory**: Persistent memory at `~/.codex/memories/`. Stores task-scoped rollout summaries, user preferences, and reusable knowledge.
 - **When to dispatch**: Cross-model consultation, second opinion on architecture decisions. Primary CLI in environments where Claude Code is unavailable (e.g., work-mandated tooling). When running there, treat Codex as the home base; the pipelines and personas apply identically.
 

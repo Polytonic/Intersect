@@ -18,17 +18,17 @@ Blast radius overrides scope per `core/agents.md` Task Triage.
 
 Automatic after any small-scope code change. The goal is fast specialist feedback without ceremony.
 
-- Pick the single most relevant persona for the change.
-- For implementation work, dispatch the reviewer when the runtime provides a dispatch primitive. If dispatch is unavailable or blocked, report that constraint in the closeout instead of silently substituting local implementation review.
-- For read-only review or advisory work with no workspace modification, the coordinator may use the relevant specialist lens in its own reasoning.
+- Pick the single most relevant non-User persona for the change.
+- Dispatch the reviewer through `core/agents.md` **Dispatch Permission**.
+- If reviewer launch is blocked by the runtime or explicitly declined, stop, state that no independent reviewer ran, and ask whether to proceed without independent review.
 - Fold findings into the change summary. No separate review phase.
-- Name the specialist lens only when it affected the result or explains a tradeoff.
+- Name the reviewer persona only when it affected the result or explains a tradeoff.
 - Escalate to Phase 1 if the review surfaces uncertainty that would change the recommendation.
 - One pass, no iteration.
 
 ## Persona selection
 
-The full persona roster lives in `core/primitives/personas.md`. **User lens is mandatory for every review or discussion task.** **Default cap:** at most 3 personas per phase for routine medium reviews, not counting the user lens or coordinator profile gate. Lift the cap for the same triggers that unlock the full pipeline (security-critical work, migrations, public APIs, large-scope diffs, high-blast-radius changes, or explicit deep review request). Choose based on what the change touches; skip those that don't apply (e.g., Internationalization on a single-locale personal site, Product manager on internal tooling with a clear owner). Add task-specific personas when useful (e.g., a **migration auditor** for verification reviews, a **compatibility auditor** for public API changes). **Chaos Monkey QA** is always included when there is a user-facing surface.
+The full persona roster lives in `core/primitives/personas.md`. **User lens is mandatory for every review or discussion task and counts only when launched through `core/agents.md` Dispatch Permission.** **Default cap:** at most 3 personas per phase for routine medium reviews, not counting the user lens or coordinator profile gate. Lift the cap for security-critical work, migrations, public APIs, large diffs, high-blast-radius changes, or explicit deep review requests. Choose based on what the change touches. Skip personas that do not apply (e.g., Internationalization on a single-locale personal site, Product manager on internal tooling with a clear owner). Add task-specific personas when useful (e.g., a **migration auditor** for verification reviews, a **compatibility auditor** for public API changes). **Chaos Monkey QA** is always included when there is a user-facing surface.
 
 ## Phase 1: Individual review
 
@@ -40,7 +40,7 @@ For each Phase 1 agent, launch a same-specialty critic in parallel. A TypeScript
 
 ## Phase 3: Cross-review
 
-Every participant from Phases 1 and 2 reviews one peer's work, paired by hierarchy or adjacent expertise. Examples: Principal reviews Staff, Staff reviews New grad (seniority chain); Language expert reviews Framework expert when the framework is written in that language; Security reviews the markdown/renderer expert when user content flows through it (adjacent domain). Coordinator profile reviews everyone as the compliance gate. Build the cross-review matrix explicitly before launching so pairings are deliberate, not ad hoc. Critics are participants too.
+Every participant from Phases 1 and 2 reviews one peer's work, paired by hierarchy or adjacent expertise. Examples: Principal reviews Staff, Staff reviews New grad (seniority chain); Language expert reviews Framework expert when the framework is written in that language; Security reviews the markdown/renderer expert when user content flows through it (adjacent domain). Coordinator profile gates everyone for compliance; it is not an independent reviewer. Build the cross-review matrix explicitly before launching so pairings are deliberate, not ad hoc. Critics are participants too.
 
 ## Synthesis
 
@@ -52,7 +52,7 @@ Dispatch fixes from consensus findings, then repeat Phases 1-3. **Default cap:**
 
 ## Execution notes
 
-- Tool affordances for parallel persona dispatch: see `core/primitives/tools.md`. Claude Code uses the Agent tool with subagent types; Codex CLI uses parallel `codex exec` invocations or Codex Cloud; Gemini uses parallel `gemini -p` invocations. The pattern is the same regardless of mechanism.
+- Tool affordances for parallel persona dispatch: see `core/primitives/tools.md`. Claude Code uses the Agent tool with subagent types. Codex CLI uses native subagents or agent continuation when the runtime exposes them. Use one-shot `codex exec` child CLI only when native dispatch is unavailable. Gemini uses parallel `gemini -p` invocations. The pattern is the same regardless of mechanism.
 - Instruct all agents to think deeply and thoroughly, using as many tokens as needed.
 - Test empirically when possible (e.g., remove cargo-culted values and verify the code still works).
 - Shared context (scope, files changed, diff stat) should be written once and referenced by all agents, not re-discovered per agent.

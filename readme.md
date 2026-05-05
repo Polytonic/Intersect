@@ -41,11 +41,11 @@ core/                                # universal markdown content
 └── pipelines/
     ├── coordination.md              # coordinated worker/team playbook
     ├── code-review.md               # multi-phase persona review
+    ├── commit.md                    # commit staging and push protocol
     ├── expert-consultation.md       # single specialist dispatch
     ├── competitive-implementation.md  # divergent then converge ("red/blue")
     ├── cross-model-consultation.md  # Codex/Gemini second opinion
-    ├── verification.md              # check discovery and execution
-    └── maintenance.md               # session-end capture and handoff
+    └── verification.md              # check discovery and execution
 
 tools/                               # per-CLI machine config
 ├── claude/
@@ -56,6 +56,7 @@ tools/                               # per-CLI machine config
 
 bin/
 ├── intersect                        # CLI
+├── test.sh                          # deterministic install/link/doctor tests
 └── verify-ai.sh                     # live, opt-in AI config verification
 ```
 
