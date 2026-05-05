@@ -14,12 +14,18 @@ DETECTED_TOOLS=()
 COMMAND_TIMEOUT_SECONDS="${INTERSECT_VERIFY_AI_TIMEOUT_SECONDS:-90}"
 
 TEMP_PROJECT=""
+TEMP_LOG_DIR=""
 PASS_COUNT=0
 SKIP_COUNT=0
 FAIL_COUNT=0
 
 BEHAVIOR_PROMPT=$(cat <<'PROMPT'
-Plan a small implementation for a role-aware admin/settings navigation system. Do not edit files.
+Synthetic profile-recognition and format check only. This is not an active
+implementation request and not a real coordinator workflow.
+
+Do not use tools, inspect files, run commands, launch subagents or agents, or
+modify workspace state. Do not describe actions as completed. Produce a compact
+static template that demonstrates the required labels and phrases.
 
 Return only these sections:
 - Delegation tree
@@ -38,7 +44,11 @@ Required exact words/phrases:
 - same gate dimension
 - fails twice
 
-Every worker brief must include "Nested consultation:" with Required or Allowed. Include at least one Required worker and one Allowed worker. Every worker return must include "Consultation decision:" and classify the consultation route as native, routed, or unavailable. Abort criteria must include the exact phrases "same gate dimension" and "fails twice".
+Every worker brief must include "Nested consultation:" with Required or Allowed.
+Include at least one Required worker and one Allowed worker. Every worker return
+must include "Consultation decision:" and classify the consultation route as
+native, routed, or unavailable. Abort criteria must include the exact phrases
+"same gate dimension" and "fails twice".
 PROMPT
 )
 
@@ -270,6 +280,7 @@ record_fail() {
 
   printf 'fail %s %s: %s\n' "$mode" "$tool" "$reason" >&2
   printf '  log: %s\n' "$log_path" >&2
+  printf '  log directory preserved: %s\n' "$TEMP_LOG_DIR" >&2
   printf '  temp project preserved: %s\n' "$TEMP_PROJECT" >&2
   FAIL_COUNT=$((FAIL_COUNT + 1))
 }
@@ -441,10 +452,14 @@ classify_failure() {
 }
 
 
-# Temp Project
+# Temp Paths
 
 create_temp_project() {
   TEMP_PROJECT="$(mktemp -d "${TMPDIR:-/tmp}/intersect-ai-verify.XXXXXX")"
+}
+
+create_temp_log_dir() {
+  TEMP_LOG_DIR="$(mktemp -d "${TMPDIR:-/tmp}/intersect-ai-verify-logs.XXXXXX")"
 }
 
 create_paths_decoy() {
@@ -458,9 +473,15 @@ prepare_temp_project_for_mode() {
   fi
 }
 
-cleanup_temp_project_on_success() {
-  if [[ "$FAIL_COUNT" -eq 0 && -n "$TEMP_PROJECT" && -d "$TEMP_PROJECT" ]]; then
+cleanup_temp_paths_on_success() {
+  local status="$?"
+
+  if [[ "$status" -eq 0 && "$FAIL_COUNT" -eq 0 && -n "$TEMP_PROJECT" && -d "$TEMP_PROJECT" ]]; then
     rm -rf "$TEMP_PROJECT"
+  fi
+
+  if [[ "$status" -eq 0 && "$FAIL_COUNT" -eq 0 && -n "$TEMP_LOG_DIR" && -d "$TEMP_LOG_DIR" ]]; then
+    rm -rf "$TEMP_LOG_DIR"
   fi
 }
 
@@ -660,8 +681,8 @@ check_paths_output() {
 check_tool() {
   local tool="$1"
   local prompt
-  local output_file="$TEMP_PROJECT/$SELECTED_MODE-$tool.output"
-  local last_message_file="$TEMP_PROJECT/$SELECTED_MODE-$tool-last-message.txt"
+  local output_file="$TEMP_LOG_DIR/$SELECTED_MODE-$tool.output"
+  local last_message_file="$TEMP_LOG_DIR/$SELECTED_MODE-$tool-last-message.txt"
   local status=0
   local output
 
@@ -710,12 +731,14 @@ check_tool() {
 validate_timeout_config
 select_mode_and_tools "$@"
 create_temp_project
+create_temp_log_dir
 prepare_temp_project_for_mode
-trap cleanup_temp_project_on_success EXIT
+trap cleanup_temp_paths_on_success EXIT
 
 printf 'live AI verification mode: %s\n' "$SELECTED_MODE"
 printf 'live AI verification tool(s): %s\n' "${SELECTED_TOOLS[*]}"
 printf 'live AI verification from temp project: %s\n' "$TEMP_PROJECT"
+printf 'live AI verification logs: %s\n' "$TEMP_LOG_DIR"
 printf 'per-tool timeout: %ss\n' "$COMMAND_TIMEOUT_SECONDS"
 
 for tool in "${SELECTED_TOOLS[@]}"; do
