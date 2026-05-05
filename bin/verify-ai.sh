@@ -3,20 +3,95 @@ set -euo pipefail
 
 # Configuration
 
-EXPECTED_MARKER="# Coordinator Profile"
+EXPECTED_PICKUP_MARKER="Coordinator Profile"
+KNOWN_MODES=("pickup" "behavior")
 KNOWN_TOOLS=("claude" "codex" "gemini")
+SELECTED_MODE="pickup"
 SELECTED_TOOLS=()
+COMMAND_TIMEOUT_SECONDS="${INTERSECT_VERIFY_AI_TIMEOUT_SECONDS:-90}"
 
 TEMP_PROJECT=""
 PASS_COUNT=0
 SKIP_COUNT=0
 FAIL_COUNT=0
 
+BEHAVIOR_PROMPT=$(cat <<'PROMPT'
+Plan a small implementation for a role-aware admin/settings navigation system. Do not edit files.
+
+Return only these sections:
+- Delegation tree
+- Worker briefs
+- Worker returns
+- Abort criteria
+
+Required exact words/phrases:
+- Nested consultation
+- Required
+- Allowed
+- Consultation decision
+- native
+- routed
+- unavailable
+- same gate dimension
+- fails twice
+
+Every worker brief must include "Nested consultation:" with Required or Allowed. Include at least one Required worker and one Allowed worker. Every worker return must include "Consultation decision:" and classify the consultation route as native, routed, or unavailable. Abort criteria must include the exact phrases "same gate dimension" and "fails twice".
+PROMPT
+)
+
+REQUIRED_BEHAVIOR_SUBSTRINGS=(
+  "Nested consultation"
+  "Required"
+  "Allowed"
+  "Consultation decision"
+  "native"
+  "routed"
+  "unavailable"
+  "same gate dimension"
+  "fails twice"
+)
+
+REQUIRED_BEHAVIOR_SECTIONS=(
+  "Delegation tree"
+  "Worker briefs"
+  "Worker returns"
+  "Abort criteria"
+)
+
+REQUIRED_BEHAVIOR_STRUCTURES=(
+  "Nested consultation: Required"
+  "Nested consultation: Allowed"
+  "Consultation decision:"
+)
+
 
 # Argument Handling
 
 print_usage() {
-  printf 'Usage: %s [claude] [codex] [gemini]\n' "$0" >&2
+  cat >&2 <<USAGE
+Usage:
+  $0 [pickup|behavior] [claude] [codex] [gemini]
+  $0 [claude] [codex] [gemini]
+
+Default mode is pickup. With no args, runs pickup for all known tools.
+Examples:
+  $0
+  $0 pickup codex
+  $0 behavior claude
+USAGE
+}
+
+is_known_mode() {
+  local mode="$1"
+
+  case "$mode" in
+    pickup | behavior)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
 }
 
 is_known_tool() {
@@ -32,31 +107,61 @@ is_known_tool() {
   esac
 }
 
-select_tools() {
-  local tool
+select_mode_and_tools() {
+  local arg
+
+  if [[ "$#" -gt 0 ]] && is_known_mode "$1"; then
+    SELECTED_MODE="$1"
+    shift
+  fi
 
   if [[ "$#" -eq 0 ]]; then
     SELECTED_TOOLS=("${KNOWN_TOOLS[@]}")
     return
   fi
 
-  for tool in "$@"; do
-    if ! is_known_tool "$tool"; then
-      printf 'fail unknown tool: %s\n' "$tool" >&2
+  for arg in "$@"; do
+    if ! is_known_tool "$arg"; then
+      printf 'fail unknown argument: %s\n' "$arg" >&2
       print_usage
       exit 2
     fi
-    SELECTED_TOOLS+=("$tool")
+    SELECTED_TOOLS+=("$arg")
   done
+}
+
+is_positive_integer() {
+  local value="$1"
+
+  case "$value" in
+    "" | *[!0123456789]*)
+      return 1
+      ;;
+  esac
+
+  [[ "$value" -gt 0 ]]
+}
+
+validate_timeout_config() {
+  if is_positive_integer "$COMMAND_TIMEOUT_SECONDS"; then
+    return
+  fi
+
+  printf 'fail invalid INTERSECT_VERIFY_AI_TIMEOUT_SECONDS: %s\n' "$COMMAND_TIMEOUT_SECONDS" >&2
+  printf 'INTERSECT_VERIFY_AI_TIMEOUT_SECONDS must be a positive integer number of seconds.\n' >&2
+  print_usage
+  exit 2
 }
 
 
 # Reporting
 
 record_pass() {
-  local tool="$1"
+  local mode="$1"
+  local tool="$2"
+  local message="$3"
 
-  printf 'pass %s: found %s\n' "$tool" "$EXPECTED_MARKER"
+  printf 'pass %s %s: %s\n' "$mode" "$tool" "$message"
   PASS_COUNT=$((PASS_COUNT + 1))
 }
 
@@ -68,10 +173,14 @@ record_skip() {
 }
 
 record_fail() {
-  local tool="$1"
-  local reason="$2"
+  local mode="$1"
+  local tool="$2"
+  local reason="$3"
+  local log_path="$4"
 
-  printf 'fail %s: %s\n' "$tool" "$reason" >&2
+  printf 'fail %s %s: %s\n' "$mode" "$tool" "$reason" >&2
+  printf '  log: %s\n' "$log_path" >&2
+  printf '  temp project preserved: %s\n' "$TEMP_PROJECT" >&2
   FAIL_COUNT=$((FAIL_COUNT + 1))
 }
 
@@ -79,15 +188,131 @@ print_summary() {
   printf 'summary: %d passed, %d skipped, %d failed\n' "$PASS_COUNT" "$SKIP_COUNT" "$FAIL_COUNT"
 }
 
-contains_expected_marker() {
+
+# Text Checks
+
+contains_text() {
   local output="$1"
+  local expected="$2"
 
   case "$output" in
-    *"$EXPECTED_MARKER"*)
+    *"$expected"*)
       return 0
       ;;
     *)
       return 1
+      ;;
+  esac
+}
+
+missing_behavior_substrings() {
+  local output="$1"
+  local substring
+  local missing=()
+
+  for substring in "${REQUIRED_BEHAVIOR_SUBSTRINGS[@]}"; do
+    if ! contains_text "$output" "$substring"; then
+      missing+=("$substring")
+    fi
+  done
+
+  local IFS=", "
+  printf '%s' "${missing[*]}"
+}
+
+missing_behavior_structures() {
+  local output="$1"
+  local label
+  local missing=()
+
+  for label in "${REQUIRED_BEHAVIOR_SECTIONS[@]}"; do
+    if ! contains_text "$output" "$label"; then
+      missing+=("section label: $label")
+    fi
+  done
+
+  for label in "${REQUIRED_BEHAVIOR_STRUCTURES[@]}"; do
+    if ! contains_text "$output" "$label"; then
+      missing+=("$label")
+    fi
+  done
+
+  local IFS=", "
+  printf '%s' "${missing[*]}"
+}
+
+canonical_pickup_marker_found() {
+  local output="$1"
+  local line
+  local normalized
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    normalized="$line"
+
+    while [[ "$normalized" == " "* || "$normalized" == $'\t'* ]]; do
+      normalized="${normalized#"${normalized:0:1}"}"
+    done
+
+    while [[ "$normalized" == *" " || "$normalized" == *$'\t' ]]; do
+      normalized="${normalized%"${normalized: -1}"}"
+    done
+
+    if [[ "${#normalized}" -ge 2 && "${normalized:0:1}" == "\`" && "${normalized: -1}" == "\`" ]]; then
+      normalized="${normalized:1:${#normalized}-2}"
+    fi
+
+    while [[ "$normalized" == " "* || "$normalized" == $'\t'* ]]; do
+      normalized="${normalized#"${normalized:0:1}"}"
+    done
+
+    while [[ "$normalized" == *" " || "$normalized" == *$'\t' ]]; do
+      normalized="${normalized%"${normalized: -1}"}"
+    done
+
+    while [[ "$normalized" == "#"* ]]; do
+      normalized="${normalized#"#"}"
+    done
+
+    while [[ "$normalized" == " "* || "$normalized" == $'\t'* ]]; do
+      normalized="${normalized#"${normalized:0:1}"}"
+    done
+
+    while [[ "$normalized" == *" " || "$normalized" == *$'\t' ]]; do
+      normalized="${normalized%"${normalized: -1}"}"
+    done
+
+    if [[ "$normalized" == "$EXPECTED_PICKUP_MARKER" ]]; then
+      return 0
+    fi
+  done <<<"$output"
+
+  return 1
+}
+
+lowercase_text() {
+  printf '%s' "$1" | tr '[:upper:]' '[:lower:]'
+}
+
+classify_failure() {
+  local status="$1"
+  local output="$2"
+  local lowered
+
+  if [[ "$status" -eq 124 ]]; then
+    printf 'timeout after %ss' "$COMMAND_TIMEOUT_SECONDS"
+    return
+  fi
+
+  lowered="$(lowercase_text "$output")"
+  case "$lowered" in
+    *"not logged in"* | *"login"* | *"authentication"* | *"api key"* | *"unauthorized"*)
+      printf 'auth/login'
+      ;;
+    *"permission denied"* | *"operation not permitted"* | *"session"* | *"sandbox"* | *"access denied"*)
+      printf 'permission/session-state'
+      ;;
+    *)
+      printf 'command exited with status %s' "$status"
       ;;
   esac
 }
@@ -99,137 +324,229 @@ create_temp_project() {
   TEMP_PROJECT="$(mktemp -d "${TMPDIR:-/tmp}/intersect-ai-verify.XXXXXX")"
 }
 
-cleanup_temp_project() {
-  if [[ -n "$TEMP_PROJECT" && -d "$TEMP_PROJECT" ]]; then
+cleanup_temp_project_on_success() {
+  if [[ "$FAIL_COUNT" -eq 0 && -n "$TEMP_PROJECT" && -d "$TEMP_PROJECT" ]]; then
     rm -rf "$TEMP_PROJECT"
   fi
 }
 
 
-# Tool Checks
+# Command Execution
 
-check_claude() {
-  local output_file="$TEMP_PROJECT/claude.output"
-  local status=0
-  local output
+run_with_timeout() {
+  local output_file="$1"
+  shift
+  local use_process_group=0
 
-  if ! command -v claude >/dev/null 2>&1; then
-    record_skip "claude"
-    return
-  fi
-
-  (
-    cd "$TEMP_PROJECT"
-    claude -p "H1 of your global preferences file? Answer with only the H1."
-  ) >"$output_file" 2>&1 || status=$?
-
-  output="$(<"$output_file")"
-  if [[ "$status" -eq 0 ]] && contains_expected_marker "$output"; then
-    record_pass "claude"
-    return
-  fi
-
-  if [[ "$status" -ne 0 ]]; then
-    record_fail "claude" "command exited with status $status"
-    return
-  fi
-
-  record_fail "claude" "missing $EXPECTED_MARKER"
-}
-
-check_codex() {
-  local output_file="$TEMP_PROJECT/codex-last-message.txt"
-  local command_output_file="$TEMP_PROJECT/codex.output"
-  local status=0
-  local output
-
-  if ! command -v codex >/dev/null 2>&1; then
-    record_skip "codex"
-    return
-  fi
-
-  codex exec \
-    --cd "$TEMP_PROJECT" \
-    --skip-git-repo-check \
-    --output-last-message "$output_file" \
-    "H1 of ~/.codex/AGENTS.md, no preamble" \
-    >"$command_output_file" 2>&1 || status=$?
-
-  if [[ -s "$output_file" ]]; then
-    output="$(<"$output_file")"
+  if command -v setsid >/dev/null 2>&1; then
+    setsid "$@" >"$output_file" 2>&1 &
+    use_process_group=1
   else
-    output="$(<"$command_output_file")"
+    "$@" >"$output_file" 2>&1 &
   fi
+  local command_pid=$!
+  local start_seconds=$SECONDS
 
-  if [[ "$status" -eq 0 ]] && contains_expected_marker "$output"; then
-    record_pass "codex"
-    return
-  fi
+  while kill -0 "$command_pid" 2>/dev/null; do
+    if (( SECONDS - start_seconds >= COMMAND_TIMEOUT_SECONDS )); then
+      if [[ "$use_process_group" -eq 1 ]]; then
+        kill -- "-$command_pid" 2>/dev/null || true
+      fi
+      kill "$command_pid" 2>/dev/null || true
+      sleep 1
+      if [[ "$use_process_group" -eq 1 ]]; then
+        kill -9 -- "-$command_pid" 2>/dev/null || true
+      fi
+      kill -9 "$command_pid" 2>/dev/null || true
+      wait "$command_pid" 2>/dev/null || true
+      printf '\n[intersect verify-ai] timed out after %ss\n' "$COMMAND_TIMEOUT_SECONDS" >>"$output_file"
+      return 124
+    fi
+    sleep 1
+  done
 
-  if [[ "$status" -ne 0 ]]; then
-    record_fail "codex" "command exited with status $status"
-    return
-  fi
-
-  record_fail "codex" "missing $EXPECTED_MARKER"
+  wait "$command_pid"
 }
 
-check_gemini() {
-  local output_file="$TEMP_PROJECT/gemini.output"
-  local status=0
-  local output
-
-  if ! command -v gemini >/dev/null 2>&1; then
-    record_skip "gemini"
-    return
-  fi
+run_in_temp_project() {
+  local output_file="$1"
+  shift
 
   (
     cd "$TEMP_PROJECT"
-    gemini -p "H1 of ~/.gemini/GEMINI.md. Answer with only the H1."
-  ) >"$output_file" 2>&1 || status=$?
-
-  output="$(<"$output_file")"
-  if [[ "$status" -eq 0 ]] && contains_expected_marker "$output"; then
-    record_pass "gemini"
-    return
-  fi
-
-  if [[ "$status" -ne 0 ]]; then
-    record_fail "gemini" "command exited with status $status"
-    return
-  fi
-
-  record_fail "gemini" "missing $EXPECTED_MARKER"
+    run_with_timeout "$output_file" "$@"
+  )
 }
 
-run_check() {
-  local tool="$1"
+read_file_if_present() {
+  local file="$1"
+
+  if [[ -f "$file" ]]; then
+    printf '%s' "$(<"$file")"
+  fi
+}
+
+
+# Tool Commands
+
+run_claude() {
+  local prompt="$1"
+  local output_file="$2"
+
+  run_in_temp_project "$output_file" claude -p "$prompt"
+}
+
+run_codex() {
+  local prompt="$1"
+  local output_file="$2"
+  local last_message_file="$3"
+
+  run_with_timeout "$output_file" \
+    codex exec \
+      --cd "$TEMP_PROJECT" \
+      --skip-git-repo-check \
+      --output-last-message "$last_message_file" \
+      "$prompt"
+}
+
+run_gemini() {
+  local prompt="$1"
+  local output_file="$2"
+
+  run_in_temp_project "$output_file" gemini -p "$prompt"
+}
+
+tool_prompt_for_mode() {
+  local mode="$1"
+  local tool="$2"
+
+  if [[ "$mode" == "behavior" ]]; then
+    printf '%s' "$BEHAVIOR_PROMPT"
+    return
+  fi
 
   case "$tool" in
     claude)
-      check_claude
+      printf 'H1 of your global preferences file? Answer with only the H1.'
       ;;
     codex)
-      check_codex
+      printf 'H1 of ~/.codex/AGENTS.md, no preamble'
       ;;
     gemini)
-      check_gemini
+      printf 'H1 of ~/.gemini/GEMINI.md. Answer with only the H1.'
       ;;
   esac
 }
 
 
+# Mode Checks
+
+check_pickup_output() {
+  local tool="$1"
+  local status="$2"
+  local output="$3"
+  local log_path="$4"
+  local reason
+
+  if [[ "$status" -eq 0 ]] && canonical_pickup_marker_found "$output"; then
+    record_pass "pickup" "$tool" "found $EXPECTED_PICKUP_MARKER"
+    return
+  fi
+
+  if [[ "$status" -ne 0 ]]; then
+    reason="$(classify_failure "$status" "$output")"
+    record_fail "pickup" "$tool" "$reason" "$log_path"
+    return
+  fi
+
+  record_fail "pickup" "$tool" "missing marker: $EXPECTED_PICKUP_MARKER" "$log_path"
+}
+
+check_behavior_output() {
+  local tool="$1"
+  local status="$2"
+  local output="$3"
+  local log_path="$4"
+  local missing
+  local missing_structure
+  local reason
+
+  if [[ "$status" -ne 0 ]]; then
+    reason="$(classify_failure "$status" "$output")"
+    record_fail "behavior" "$tool" "$reason" "$log_path"
+    return
+  fi
+
+  missing="$(missing_behavior_substrings "$output")"
+  if [[ -n "$missing" ]]; then
+    record_fail "behavior" "$tool" "missing assertion substring(s): $missing" "$log_path"
+    return
+  fi
+
+  missing_structure="$(missing_behavior_structures "$output")"
+  if [[ -n "$missing_structure" ]]; then
+    record_fail "behavior" "$tool" "missing structural assertion(s): $missing_structure" "$log_path"
+    return
+  fi
+
+  record_pass "behavior" "$tool" "found required substrings and structure"
+}
+
+check_tool() {
+  local tool="$1"
+  local prompt
+  local output_file="$TEMP_PROJECT/$SELECTED_MODE-$tool.output"
+  local last_message_file="$TEMP_PROJECT/$SELECTED_MODE-$tool-last-message.txt"
+  local status=0
+  local output
+
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    record_skip "$tool"
+    return
+  fi
+
+  prompt="$(tool_prompt_for_mode "$SELECTED_MODE" "$tool")"
+
+  case "$tool" in
+    claude)
+      run_claude "$prompt" "$output_file" || status=$?
+      output="$(read_file_if_present "$output_file")"
+      ;;
+    codex)
+      run_codex "$prompt" "$output_file" "$last_message_file" || status=$?
+      if [[ -s "$last_message_file" ]]; then
+        output="$(read_file_if_present "$last_message_file")"
+      else
+        output="$(read_file_if_present "$output_file")"
+      fi
+      ;;
+    gemini)
+      run_gemini "$prompt" "$output_file" || status=$?
+      output="$(read_file_if_present "$output_file")"
+      ;;
+  esac
+
+  if [[ "$SELECTED_MODE" == "pickup" ]]; then
+    check_pickup_output "$tool" "$status" "$output" "$output_file"
+  else
+    check_behavior_output "$tool" "$status" "$output" "$output_file"
+  fi
+}
+
+
 # Main
 
-select_tools "$@"
+validate_timeout_config
+select_mode_and_tools "$@"
 create_temp_project
-trap cleanup_temp_project EXIT
+trap cleanup_temp_project_on_success EXIT
 
+printf 'live AI verification mode: %s\n' "$SELECTED_MODE"
 printf 'live AI verification from temp project: %s\n' "$TEMP_PROJECT"
+printf 'per-tool timeout: %ss\n' "$COMMAND_TIMEOUT_SECONDS"
 
 for tool in "${SELECTED_TOOLS[@]}"; do
-  run_check "$tool"
+  check_tool "$tool"
 done
 
 print_summary

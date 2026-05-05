@@ -1,6 +1,6 @@
-# Pipeline: Regression Test
+# Pipeline: Verification
 
-Run after any code-modifying change to catch breakage before declaring done. Cheap insurance: catches things that "looked right" but aren't.
+Run after any code, config, or content change to catch breakage before declaring done.
 
 This pipeline owns check discovery and execution. `core/agents.md` owns the acceptance gate.
 

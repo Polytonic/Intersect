@@ -31,19 +31,20 @@ core/                                # universal markdown content
 ├── agents.md                        # coordinator profile entrypoint
 ├── claude.md                        # Claude wrapper (@-imports core/agents.md only)
 ├── styles/
-│   ├── implementation.md            # coding, testing, debugging, formatting
-│   └── prose.md                     # copy, writing, documentation style
+│   ├── implementation.md            # coding, debugging, formatting
+│   ├── interaction-design.md        # UI behavior, accessibility
+│   ├── prose.md                     # copy, writing, documentation style
+│   └── testing.md                   # test design standards
 ├── primitives/
 │   ├── personas.md                  # reviewer/expert roster
-│   ├── tools.md                     # claude/codex/gemini affordances
-│   ├── coordination.md              # multi-agent team patterns
-│   └── interaction-design.md        # UI behavior, accessibility
+│   └── tools.md                     # claude/codex/gemini affordances
 └── pipelines/
+    ├── coordination.md              # coordinated worker/team playbook
     ├── code-review.md               # multi-phase persona review
     ├── expert-consultation.md       # single specialist dispatch
     ├── competitive-implementation.md  # divergent then converge ("red/blue")
     ├── cross-model-consultation.md  # Codex/Gemini second opinion
-    ├── regression-test.md           # automated checks after code-modifying changes
+    ├── verification.md              # check discovery and execution
     └── maintenance.md               # session-end capture and handoff
 
 tools/                               # per-CLI machine config
@@ -97,13 +98,15 @@ Two reasons, one aesthetic and one technical:
 
 The repo has three referenced layers below `agents.md`:
 
-- **Styles** (`core/styles/`): implementation and prose rules loaded by the agent when a task calls for them.
-- **Primitives** (`core/primitives/`): reusable building blocks (personas, tools, coordination patterns) loaded when the File Map or a brief names them.
+- **Styles** (`core/styles/`): standards loaded by workers and reviewers: implementation, interaction design, prose, and testing.
+- **Primitives** (`core/primitives/`): reusable capabilities and lenses, loaded when the File Map or a brief names them.
 - **Pipelines** (`core/pipelines/`): composed workflows loaded when the File Map or the task trigger points to them.
 
 `core/agents.md` is the shared entry point. Its File Map indexes all three directories. Paths in briefs and docs should be repo-root relative, unless a quoted source says otherwise.
 
 Adding a new pipeline: create `core/pipelines/<name>.md` describing trigger, steps, and synthesis. Reference any primitives it uses by path. Update the File Map in `core/agents.md` to list it.
+
+Adding a new style: create `core/styles/<name>.md` describing the standard and when to load it. Update the File Map and Style File Loading list in `core/agents.md`.
 
 Adding a new primitive: create `core/primitives/<name>.md`. Update the File Map in `core/agents.md`. Pipelines reference primitives by path.
 
@@ -133,14 +136,19 @@ bash bin/test.sh
 
 Sandboxed in a temp `HOME` so it never touches your real `~/.claude` etc. Exercises the install/uninstall/link/unlink/doctor logic deterministically. Run after any change to `bin/intersect`. Exits non-zero on failure.
 
-### 3. Live AI config pickup (`bin/verify-ai.sh`)
+### 3. Live AI verification (`bin/verify-ai.sh`)
 
 ```sh
 bin/verify-ai.sh
-bin/verify-ai.sh codex
+bin/verify-ai.sh pickup codex
+bin/verify-ai.sh behavior claude
 ```
 
-Opt-in provider-backed smoke checks for Claude, Codex, and Gemini. The script runs from a temp directory outside this repo and checks that each selected CLI can see the linked global config in another project context. It skips tools that are not installed. Do not run this in CI or pre-commit.
+Opt-in provider-backed smoke checks for Claude, Codex, and Gemini. `pickup` checks that each selected CLI can see the linked global config from a temp directory outside this repo. `behavior` checks the nested-consultation smoke prompt with mechanical grading for required phrases and structure, including `Delegation tree`, `Worker briefs`, `Worker returns`, `Abort criteria`, `Nested consultation: Required`, `Nested consultation: Allowed`, `Consultation decision:`, `same gate dimension`, and `fails twice`.
+
+With no arguments, `bin/verify-ai.sh` runs `pickup` for all known tools. Tool selection works in both modes, for example `bin/verify-ai.sh pickup codex` and `bin/verify-ai.sh behavior claude`.
+
+These checks depend on live provider access and the local CLI session state. Auth/login failures, restricted session directories, sandbox permissions, provider outages, and timeouts can fail the run before the model behavior is evaluated. The script prints classified diagnostics where practical and keeps logs preserved in the printed temp project path on failure. It removes the temp project only after full success. Do not run this in CI or pre-commit.
 
 See [`test.md`](test.md) for the executable check and manual command table.
 

@@ -28,7 +28,7 @@ Readability, confusing patterns, tribal knowledge, unclear control flow.
 Injection, data exposure, trust boundaries, supply chain, multi-user risks.
 
 **Accessibility specialist**
-Flags usability risks involving ARIA attributes, screen reader behavior, focus management, contrast ratios, target sizes, and keyboard navigation. Recommendations are advisory unless the task or applicable standard makes them acceptance criteria. Load `core/primitives/interaction-design.md` for the rule set.
+Flags usability risks involving ARIA attributes, screen reader behavior, focus management, contrast ratios, target sizes, and keyboard navigation. Recommendations are advisory unless the task or applicable standard makes them acceptance criteria. Load `core/styles/interaction-design.md` for the rule set.
 
 **Coordinator profile**
 Check output against `core/agents.md` Core Contract and the relevant style file (`core/styles/implementation.md` for code, `core/styles/prose.md` for text).
@@ -40,10 +40,10 @@ Apply the user's stated goals, constraints, deployment assumptions, and preferen
 System boundaries, separation of concerns, scaling implications, dependency direction, whether the design supports planned evolution (e.g., from CLI to service).
 
 **UI/UX designer**
-Evaluates visual hierarchy, information flow, spacing, color usage, and interaction patterns. Focuses on whether the tool "reads" correctly: do users' eyes flow from input to output naturally? Load `core/primitives/interaction-design.md` for the rule set.
+Evaluates visual hierarchy, information flow, spacing, color usage, and interaction patterns. Focuses on whether the tool "reads" correctly: do users' eyes flow from input to output naturally? Load `core/styles/interaction-design.md` for the rule set.
 
 **Visual consistency auditor**
-Pixel-level design system compliance. Audits every font size, weight, color, radius, and gap against the documented system. Catches drift and undocumented one-off values. Load `core/primitives/interaction-design.md` for the rule set.
+Pixel-level design system compliance. Audits every font size, weight, color, radius, and gap against the documented system. Catches drift and undocumented one-off values. Load `core/styles/interaction-design.md` for the rule set.
 
 **Performance auditor**
 Bundle size, runtime cost, query count, memory ceiling, render budget. Catches N+1 queries, unbounded loops, oversized payloads, blocking I/O on hot paths. Demands measurements, not intuition.
@@ -75,7 +75,7 @@ Challenges fundamental assumptions. Questions whether features earn their comple
 ## Always-on (when there is a user-facing surface)
 
 **Chaos Monkey QA**
-Walks through every reachable state as a user, computes pixel budgets at mobile viewports (375px/390px/768px), tests edge cases visually rather than by code inspection. Load `core/primitives/interaction-design.md` for the rule set.
+Walks through every reachable state as a user, computes pixel budgets at mobile viewports (375px/390px/768px), tests edge cases visually rather than by code inspection. Load `core/styles/interaction-design.md` for the rule set.
 
 ## Task-specific examples
 

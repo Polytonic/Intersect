@@ -1,6 +1,6 @@
 # Implementation Style
 
-Load this file before writing or modifying code. Contains coding philosophy, testing standards, debugging methodology, and code formatting rules.
+Load this file before writing or modifying code. Contains coding philosophy, debugging methodology, and code formatting rules. Load `core/styles/testing.md` when writing, modifying, or reviewing tests.
 
 ## Languages & Stack
 - Primary working languages: C++, Python, TypeScript
@@ -17,16 +17,6 @@ Load this file before writing or modifying code. Contains coding philosophy, tes
 - **Atomic Design** (web/UI projects): UI components follow Brad Frost's Atomic Design hierarchy (Atom → Molecule → Compound → Template → Page), with "Compound" replacing "Organism." Shared primitives (atoms/molecules) live in `components/`; tool-specific molecules and compounds live in the tool's view directory; the orchestrator file is the template
 - **Write code that's easy to delete**: Structure code so that removing a feature, module, or block is a clean operation, not a surgical one. Self-contained units with explicit boundaries minimize merge conflicts. When conflicts do occur, the resolution should be obvious from the structure alone, no guesswork about which side to keep or how interleaved changes fit together
 - **Weight reversibility**: When proposing a design choice, name whether the decision is reversible (rename, refactor, undo) or irreversible (data migration, public API, infra commitment). Bias toward reversible options when alternatives are roughly comparable. Spend the irreversibility budget consciously.
-
-## Testing Philosophy
-- **Mock as little as possible**: Use real implementations, real databases, real file systems whenever feasible. Mocks should be a last resort for things you truly cannot control (external APIs, third-party services, hardware). Real implementations require deterministic setup: invest in shared test infrastructure (transactions, fixtures, isolated state, proper cleanup) so that "real" doesn't mean "flaky."
-- **Don't test the mock**: The most common testing antipattern: someone builds an elaborate mock, then writes assertions against the mock's behavior instead of the real system's. If the test would still pass after deleting the production code, the test is worthless.
-- **Prefer integration over isolation**: A test that exercises the real code path catches real bugs. A test that exercises a mock catches nothing but typos in the mock setup.
-- **Test behavior, not implementation**: Assert on observable outcomes (return values, side effects, final state), not on internal method calls or call ordering. Tests coupled to implementation break on every refactor, which trains people to stop refactoring.
-- **Determinism is non-negotiable**: No sleeps, no timing-dependent assertions, no uncontrolled randomness. A flaky test is worse than no test because it teaches the team to ignore failures. Quarantine and fix or delete; don't normalize.
-- **Tests should be obvious**: A failing test should make the bug self-evident. Avoid test helper abstractions that hide what's actually being asserted. If you have to read three layers of setup utilities to understand a failure, the test has failed at its job. The bar is on-call: someone paged at 2am should diagnose from the failure message alone.
-- **Cover the happy path and the edges**: Always write at least one test for the golden path as a baseline contract against regressions. Then focus effort on boundary conditions, empty inputs, off-by-ones, and error paths, where bugs actually hide.
-- **Black-box inspection complements code analysis**: Static analysis catches type errors and logic bugs; only visual and behavioral inspection catches layout shifts, hover states, animation timing, focus order, and what the user actually sees. For any UI-touching change: run the dev server, exercise the change in a browser, verify the golden path AND adjacent features for regressions. Type checks pass ≠ feature works. If the environment is headless or the UI can't be rendered, say so explicitly rather than claiming success.
 
 ## Debugging Methodology
 Debugging is hypothesis-driven, not stab-in-the-dark. Treat each bug as a scientific investigation: form a hypothesis, design a test, run it, observe, update the model. Repeat until the model matches reality.
