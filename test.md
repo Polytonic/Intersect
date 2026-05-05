@@ -6,12 +6,15 @@ See readme.md § For AI agents working in this repo for the directive that pairs
 
 ```sh
 bin/verify-ai.sh
+bin/verify-ai.sh behavior
 bin/verify-ai.sh pickup codex
 bin/verify-ai.sh behavior claude
-bin/verify-ai.sh paths codex
+bin/verify-ai.sh paths claude codex gemini
 ```
 
-`pickup` checks whether each CLI loads the global config. `behavior` checks whether each CLI follows the nested-consultation smoke prompt and passes mechanical assertions for required phrases and structure, including `Delegation tree`, `Worker briefs`, `Worker returns`, `Abort criteria`, `Nested consultation: Required`, `Nested consultation: Allowed`, `Consultation decision:`, `same gate dimension`, and `fails twice`.
+With no tool arguments, `bin/verify-ai.sh` detects the current CLI from explicit runtime environment markers and runs only that tool. If it does not detect exactly one current CLI, it prints usage and exits 2. Cross-tool diagnostics require explicit tool names, for example `bin/verify-ai.sh pickup claude codex gemini`.
+
+`pickup` checks whether each selected CLI loads the global config. `behavior` checks whether each selected CLI follows the nested-consultation smoke prompt and passes mechanical assertions for required phrases and structure, including `Delegation tree`, `Worker briefs`, `Worker returns`, `Abort criteria`, `Nested consultation: Required`, `Nested consultation: Allowed`, `Consultation decision:`, `same gate dimension`, and `fails twice`.
 
 `paths` creates a workspace decoy at `core/styles/interaction-design.md`. It asks for `profile:core/styles/interaction-design.md` and fails if the answer resolves the decoy instead of the profile file whose first H2 is `Interaction Design`.
 

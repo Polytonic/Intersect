@@ -145,16 +145,17 @@ Sandboxed in a temp `HOME` so it never touches your real `~/.claude` etc. Exerci
 
 ```sh
 bin/verify-ai.sh
+bin/verify-ai.sh behavior
 bin/verify-ai.sh pickup codex
 bin/verify-ai.sh behavior claude
-bin/verify-ai.sh paths codex
+bin/verify-ai.sh paths claude codex gemini
 ```
 
-Opt-in provider-backed smoke checks for Claude, Codex, and Gemini. `pickup` checks that each selected CLI can see the linked global config from a temp directory outside this repo. `behavior` checks the nested-consultation smoke prompt with mechanical grading for required phrases and structure, including `Delegation tree`, `Worker briefs`, `Worker returns`, `Abort criteria`, `Nested consultation: Required`, `Nested consultation: Allowed`, `Consultation decision:`, `same gate dimension`, and `fails twice`.
+Opt-in provider-backed smoke checks for Claude, Codex, and Gemini. With no tool arguments, the script detects the current CLI from explicit runtime environment markers and runs only that tool. `pickup` checks that each selected CLI can see the linked global config from a temp directory outside this repo. `behavior` checks the nested-consultation smoke prompt with mechanical grading for required phrases and structure, including `Delegation tree`, `Worker briefs`, `Worker returns`, `Abort criteria`, `Nested consultation: Required`, `Nested consultation: Allowed`, `Consultation decision:`, `same gate dimension`, and `fails twice`.
 
 `paths` creates a workspace decoy at `core/styles/interaction-design.md`. It then checks that `profile:core/styles/interaction-design.md` resolves to the Intersect profile file whose first H2 is `Interaction Design`.
 
-With no arguments, `bin/verify-ai.sh` runs `pickup` for all known tools. Tool selection works in every mode, for example `bin/verify-ai.sh pickup codex`, `bin/verify-ai.sh behavior claude`, and `bin/verify-ai.sh paths codex`.
+If the script does not detect exactly one current CLI, `bin/verify-ai.sh` prints usage and exits 2. Cross-tool diagnostics require explicit tool names, for example `bin/verify-ai.sh pickup claude codex gemini`. Tool selection works in every mode, for example `bin/verify-ai.sh pickup codex`, `bin/verify-ai.sh behavior claude`, and `bin/verify-ai.sh paths codex`.
 
 These checks depend on live provider access and the local CLI session state. Auth/login failures, restricted session directories, sandbox permissions, provider outages, and timeouts can fail the run before the model behavior is evaluated. The script prints classified diagnostics where practical and keeps logs preserved in the printed temp project path on failure. It removes the temp project only after full success. Do not run this in CI or pre-commit.
 

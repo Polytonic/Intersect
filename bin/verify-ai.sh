@@ -10,6 +10,7 @@ KNOWN_MODES=("pickup" "behavior" "paths")
 KNOWN_TOOLS=("claude" "codex" "gemini")
 SELECTED_MODE="pickup"
 SELECTED_TOOLS=()
+DETECTED_TOOLS=()
 COMMAND_TIMEOUT_SECONDS="${INTERSECT_VERIFY_AI_TIMEOUT_SECONDS:-90}"
 
 TEMP_PROJECT=""
@@ -77,15 +78,17 @@ REQUIRED_BEHAVIOR_STRUCTURES=(
 print_usage() {
   cat >&2 <<USAGE
 Usage:
-  $0 [pickup|behavior|paths] [claude] [codex] [gemini]
-  $0 [claude] [codex] [gemini]
+  $0 [pickup|behavior|paths] [claude|codex|gemini]...
+  $0 [claude|codex|gemini]...
 
-Default mode is pickup. With no args, runs pickup for all known tools.
+Default mode is pickup. With no tool arguments, the script detects the current CLI and runs only that tool.
+Cross-tool diagnostics require explicit tool names.
 Examples:
   $0
+  $0 behavior
   $0 pickup codex
   $0 behavior claude
-  $0 paths codex
+  $0 paths claude codex gemini
 USAGE
 }
 
@@ -115,6 +118,85 @@ is_known_tool() {
   esac
 }
 
+has_env_var() {
+  local name="$1"
+
+  [[ -n "${!name+x}" ]]
+}
+
+has_any_env_var() {
+  local name
+
+  for name in "$@"; do
+    if has_env_var "$name"; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+environment_indicates_tool() {
+  local tool="$1"
+
+  case "$tool" in
+    claude)
+      has_any_env_var \
+        CLAUDECODE \
+        CLAUDE_CODE_ENTRYPOINT \
+        CLAUDE_CODE_SESSION_ID \
+        CLAUDE_CODE_SHELL_PREFIX
+      ;;
+    codex)
+      has_any_env_var \
+        CODEX_THREAD_ID \
+        CODEX_SANDBOX \
+        CODEX_INTERNAL_ORIGINATOR_OVERRIDE \
+        CODEX_CI
+      ;;
+    gemini)
+      has_any_env_var \
+        GEMINI_CLI \
+        GEMINI_CLI_ENV \
+        GEMINI_CLI_SESSION_ID
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+detect_current_tools() {
+  local tool
+
+  DETECTED_TOOLS=()
+  for tool in "${KNOWN_TOOLS[@]}"; do
+    if environment_indicates_tool "$tool"; then
+      DETECTED_TOOLS+=("$tool")
+    fi
+  done
+}
+
+select_current_tool_or_exit() {
+  detect_current_tools
+
+  if [[ "${#DETECTED_TOOLS[@]}" -eq 1 ]]; then
+    SELECTED_TOOLS=("${DETECTED_TOOLS[0]}")
+    return
+  fi
+
+  if [[ "${#DETECTED_TOOLS[@]}" -gt 1 ]]; then
+    printf 'fail ambiguous current CLI environment: ' >&2
+    print_joined_labels "${DETECTED_TOOLS[@]}" >&2
+    printf '\n' >&2
+  else
+    printf 'fail no explicit tool supplied and current CLI was not detected from environment\n' >&2
+  fi
+
+  print_usage
+  exit 2
+}
+
 select_mode_and_tools() {
   local arg
 
@@ -124,7 +206,7 @@ select_mode_and_tools() {
   fi
 
   if [[ "$#" -eq 0 ]]; then
-    SELECTED_TOOLS=("${KNOWN_TOOLS[@]}")
+    select_current_tool_or_exit
     return
   fi
 
@@ -224,8 +306,11 @@ missing_behavior_substrings() {
     fi
   done
 
-  local IFS=", "
-  printf '%s' "${missing[*]}"
+  if [[ "${#missing[@]}" -eq 0 ]]; then
+    return
+  fi
+
+  print_joined_labels "${missing[@]}"
 }
 
 missing_behavior_structures() {
@@ -245,8 +330,25 @@ missing_behavior_structures() {
     fi
   done
 
-  local IFS=", "
-  printf '%s' "${missing[*]}"
+  if [[ "${#missing[@]}" -eq 0 ]]; then
+    return
+  fi
+
+  print_joined_labels "${missing[@]}"
+}
+
+print_joined_labels() {
+  if [[ "$#" -eq 0 ]]; then
+    return
+  fi
+
+  printf '%s' "$1"
+  shift
+
+  while [[ "$#" -gt 0 ]]; do
+    printf ', %s' "$1"
+    shift
+  done
 }
 
 canonical_heading_marker_found() {
@@ -612,6 +714,7 @@ prepare_temp_project_for_mode
 trap cleanup_temp_project_on_success EXIT
 
 printf 'live AI verification mode: %s\n' "$SELECTED_MODE"
+printf 'live AI verification tool(s): %s\n' "${SELECTED_TOOLS[*]}"
 printf 'live AI verification from temp project: %s\n' "$TEMP_PROJECT"
 printf 'per-tool timeout: %ss\n' "$COMMAND_TIMEOUT_SECONDS"
 
