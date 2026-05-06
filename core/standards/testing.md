@@ -1,6 +1,6 @@
 # Testing Standard
 
-Load this file before writing, modifying, or reviewing tests. Contains test design standards. Load `core/pipelines/verification.md` when deciding which checks to run.
+Load this file before writing, modifying, or reviewing tests. Contains test design standards. Load `profile:core/pipelines/verification.md` when deciding which checks to run.
 
 ## Test Design
 
@@ -12,3 +12,7 @@ Load this file before writing, modifying, or reviewing tests. Contains test desi
 - **Tests should be obvious**: A failing test should make the bug self-evident. Avoid helper abstractions that hide the assertion. Someone paged at 2am should diagnose from the failure message alone.
 - **Cover the happy path and the edges**: Write at least one golden-path test as the regression baseline. Then focus on boundary conditions, empty inputs, off-by-ones, and error paths.
 - **Black-box inspection complements code analysis**: Static analysis catches type errors and logic bugs. Visual and behavioral inspection catches layout shifts, hover states, animation timing, focus order, and what the user sees. For UI-touching changes, run the dev server, exercise the change in a browser, and verify the golden path plus adjacent features. If the environment is headless or the UI cannot render, say so explicitly.
+
+## Anti-Patterns
+
+- **Do not add tests for typos or cosmetic changes**: Typos and cosmetic changes do not justify new tests. Use tests for behavior, contracts, regressions, boundaries, and failure modes.

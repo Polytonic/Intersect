@@ -113,13 +113,13 @@ Treat these failure modes as gate failures: scope expansion, incomplete question
 ## Standards and Verification
 
 Sub-agents must load the relevant standard before work:
-- Code changes: `profile:core/standards/implementation.md` and `profile:core/standards/prose.md`. Literate block headers and intent comments are prose; assume both apply unless the task is a narrow mechanical edit with no prose surface.
+- Code changes: `profile:core/standards/implementation.md`.
+- Text surfaces: `profile:core/standards/prose.md` when the task or diff touches comments, docstrings, literate block headers, documentation, user-facing copy or strings, commit or PR text, or other prose surfaces. When implementation work could touch text, each implementation or standards-correction return must say whether this trigger fired.
 - Test changes: also `profile:core/standards/testing.md`
-- Prose/docs/copy: `profile:core/standards/prose.md`
 - UI changes: also `profile:core/standards/interaction-design.md`
 - Review teams: `profile:core/primitives/personas.md`
 
-After workspace-modifying workers return, dispatch a standards correction worker that reads the diff and relevant standard, then directly edits mechanical violations. The standards worker must not change logic or behavior. The coordinator verifies the final output.
+After workspace-modifying workers return, dispatch a standards correction worker that reads the diff and standards selected by the same triggers, then directly edits mechanical violations. The standards worker must not change logic or behavior. The coordinator verifies the final output.
 
 The coordinator verifies output without loading full standards:
 - **Code**: compile/lint clean; matches project naming, structure, and patterns; scope is tight; required tests pass; irreversible change is flagged.

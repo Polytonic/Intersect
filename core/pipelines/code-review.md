@@ -12,14 +12,14 @@ Match pipeline depth to the change's scope and blast radius per Task Triage:
 - **Medium scope or elevated blast radius** (touches shared utilities, public interfaces, data models) → Phase 1 plus Phase 2.
 - **Large scope or high blast radius** (security-critical, migration, public API, cross-cutting, irreversible) → full pipeline (Phase 1-3 plus iteration).
 
-Blast radius overrides scope per `core/agents.md` Task Triage.
+Blast radius overrides scope per `profile:core/agents.md` Task Triage.
 
 ## Quick Review
 
 Automatic after any small-scope code change. The goal is fast specialist feedback without ceremony.
 
 - Pick the single most relevant non-User persona for the change.
-- Dispatch the reviewer through `core/agents.md` **Dispatch Permission**.
+- Dispatch the reviewer through `profile:core/agents.md` **Dispatch Permission**.
 - If reviewer launch is blocked by the runtime or explicitly declined, stop, state that no independent reviewer ran, and ask whether to proceed without independent review.
 - Fold findings into the change summary. No separate review phase.
 - Name the reviewer persona only when it affected the result or explains a tradeoff.
@@ -28,7 +28,7 @@ Automatic after any small-scope code change. The goal is fast specialist feedbac
 
 ## Persona selection
 
-The full persona roster lives in `core/primitives/personas.md`. **User lens is mandatory for every review or discussion task and counts only when launched through `core/agents.md` Dispatch Permission.** **Default cap:** at most 3 personas per phase for routine medium reviews, not counting the user lens or coordinator profile gate. Lift the cap for security-critical work, migrations, public APIs, large diffs, high-blast-radius changes, or explicit deep review requests. Choose based on what the change touches. Skip personas that do not apply (e.g., Internationalization on a single-locale personal site, Product manager on internal tooling with a clear owner). Add task-specific personas when useful (e.g., a **migration auditor** for verification reviews, a **compatibility auditor** for public API changes). **Chaos Monkey QA** is always included when there is a user-facing surface.
+The full persona roster lives in `core/primitives/personas.md`. **User lens is mandatory for every review or discussion task and counts only when launched through `profile:core/agents.md` Dispatch Permission.** **Default cap:** at most 3 personas per phase for routine medium reviews, not counting the user lens or coordinator profile gate. Lift the cap for security-critical work, migrations, public APIs, large diffs, high-blast-radius changes, or explicit deep review requests. Choose based on what the change touches. Skip personas that do not apply (e.g., Internationalization on a single-locale personal site, Product manager on internal tooling with a clear owner). Add task-specific personas when useful (e.g., a **migration auditor** for verification reviews, a **compatibility auditor** for public API changes). **Chaos Monkey QA** is always included when there is a user-facing surface.
 
 For security-critical work, migrations, public APIs, irreversible changes, and high-blast-radius reviews, include model-independent judgment by default. Run the load-bearing persona through different model families or sibling CLIs when the runtime permits it. Synthesize only after each reviewer has formed an independent judgment. If the runtime blocks model diversity, record the missing independence and the residual risk.
 
@@ -46,7 +46,7 @@ Every participant from Phases 1 and 2 reviews one peer's work, paired by hierarc
 
 ## Synthesis
 
-After Phase 3, consolidate all findings into a single summary categorized as **Fix now**, **Fix before deploy**, and **Nice to have**. Show everything in each category, do not cap or constrain the list. For each finding, indicate which agent(s) raised it (e.g., "Principal engineer + Python expert flagged this"). Organize findings against the three review goals: *missed things* (correctness gaps, regressions), *quality improvements* (maintainability, preferences-file compliance), *process feedback* (observations on how the review itself went, to fold back into `core/agents.md`).
+After Phase 3, consolidate all findings into a single summary categorized as **Fix now**, **Fix before deploy**, and **Nice to have**. Show everything in each category, do not cap or constrain the list. For each finding, indicate which agent(s) raised it (e.g., "Principal engineer + Python expert flagged this"). Organize findings against the three review goals: *missed things* (correctness gaps, regressions), *quality improvements* (maintainability, standards and profile compliance), *process feedback* (observations on how the review itself went, to fold back into `profile:core/agents.md`).
 
 ## Iteration
 
@@ -58,4 +58,4 @@ Dispatch fixes from consensus findings, then repeat Phases 1-3. **Default cap:**
 - Instruct all agents to think deeply and thoroughly, using as many tokens as needed.
 - Test empirically when possible (e.g., remove cargo-culted values and verify the code still works).
 - Shared context (scope, files changed, diff stat) should be written once and referenced by all agents, not re-discovered per agent.
-- **Agent prompt construction**: Brief each persona per the `core/agents.md` dispatch contract. Include the relevant standards so agents check against the actual rules: `core/standards/implementation.md` for code, `core/standards/testing.md` for tests, and `core/standards/interaction-design.md` for UI. Use one shared context for all agents and a distinct focus lens for each.
+- **Agent prompt construction**: Brief each persona per the `profile:core/agents.md` dispatch contract. Use one shared context for all agents and a distinct focus lens for each. Include standards by trigger: `profile:core/standards/implementation.md` for code, `profile:core/standards/prose.md` when comments, docs, user-facing text, or literate block headers are in scope, `profile:core/standards/testing.md` for tests, and `profile:core/standards/interaction-design.md` for UI.
