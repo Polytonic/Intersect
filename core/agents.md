@@ -25,9 +25,13 @@ Resolve conflicts in this order: active user request > safety/security/legal > h
 ## Work Loops
 
 - **Implementation**: Spec -> Implement -> Test -> Review -> Address Review Feedback -> Repeat -> Human Feedback.
-- **Review / advisory / discussion**: Frame -> Inspect -> Consult -> Synthesize -> Gate -> Human Feedback. Use this loop when work is multi-step or independent judgment can change the answer.
+- **Review / advisory / discussion**: Frame -> Inspect -> Consult -> Synthesize -> Gate -> Human Feedback. Use this loop for requests to review, critique, diagnose, recommend, compare options, discuss tradeoffs, change process/profile/policy, interpret ambiguous requirements, or decide next steps. Strong triggers include "review", "advisory", "discussion", "diagnose", "recommend", "should we", "how might", "what if", and process/profile/policy changes, even when narrow or read-only.
 
 Frame means state Goal / Context / Constraints / Done When; inspect live repo, docs, runtime, and evidence; include the user lens and any needed specialist lens; synthesize facts, inferences, assumptions, and disagreements; gate against scope, evidence, local conventions, and this profile.
+
+When the review/advisory/discussion loop triggers, make it visible before inspection or dispatch with a compact marker: `Advisory loop: active. Trigger: <reason>. Dispatch: <status>.` Keep the marker to one line unless a blocker needs more.
+
+A direct factual answer may skip this loop only when all conditions hold: the request is narrow, answerable from current context or one quick lookup, free of recommendation or tradeoff judgment, unrelated to future process/team/workspace behavior, and not dependent on independent judgment. For skipped requests that resemble triggers, state a compact skip line with the reason. Obvious tiny factual answers need no marker.
 
 The coordinator owns both loops and repeats until the work is ready for human feedback or a blocker is explicit. Workers own implementation, tests, and style corrections. Reviewers own independent critique.
 
@@ -58,14 +62,9 @@ Choose implementers and reviewers by risk, changed surface, domain, uncertainty,
 
 Selection signals: language/framework/config/runtime -> implementation or review specialist; user-facing surface -> product, UI/UX, accessibility, and QA lenses; data/auth/security/privacy/persistence/public API -> domain and compatibility/security reviewer; tests/release/verification -> test or release specialist; review/advisory/discussion -> dispatch the User lens before synthesis.
 
-One persona per reviewer agent. Do not batch independent reviewers into one prompt when separate judgment matters.
+One persona per reviewer agent. Independent reviewers must form judgment before seeing peer findings. Do not batch independent reviewers into one prompt when separate judgment matters.
 
-Use composable dispatch topologies. Runtime mappings live in `profile:core/primitives/tools.md`.
-
-- **Fan-out**: independent agents in parallel for reviews, independent file scopes, and scoped exploration.
-- **Sequential handoff**: one worker's output passes through coordinator synthesis to the next worker.
-- **Phased loop**: synthesize between rounds for implementation/review/fix cycles and non-interactive child runtimes.
-- **Speculative parallel**: competing approaches under one spec when comparison can reveal the better path.
+Use the dispatch topology that matches the dependency graph: fan out independent scopes or lenses, hand off sequential dependencies through coordinator synthesis, use phased loops for repeated rounds, and run speculative parallel work when competing approaches can reveal the better path. Runtime mappings live in `profile:core/primitives/tools.md`.
 
 The coordinator routes questions, checkpoints, peer findings, and user decisions unless a direct peer mechanism exists. Direct peer mechanisms must still return through coordinator synthesis, scope control, and final gate.
 
@@ -75,7 +74,11 @@ For implementation and multi-step work, use the runtime's rendered task tracker 
 
 After synthesis, the coordinator must close completed agents unless imminent continuation will reuse that context. Lifecycle cleanup is coordinator-owned.
 
-## Nested Consultation
+## Dispatch Contract
+
+Every dispatch brief must contain: **Role**, **Goal**, **Product intent**, **Context**, **Style files to load**, **File scope**, **Nested consultation**, **Checkpoints / return conditions**, **Collaboration mode**, **Done when**, and **Out of scope**.
+
+Field contents must be concrete. **Role** names the persona or specialist lens. **Goal** names the output the worker owns. **Product intent** states why the output matters to the user. **Context** gives relevant files, current state, constraints, and assumptions. **Style files to load** lists required docs. **File scope** names files the worker may inspect or edit. **Checkpoints / return conditions** says when to stop, ask, or report. **Collaboration mode** names the routing pattern. **Done when** gives observable pass/fail criteria. **Out of scope** names files, behavior, or cleanup the worker must not touch.
 
 Every implementation brief must include **Nested consultation**:
 
@@ -83,29 +86,29 @@ Every implementation brief must include **Nested consultation**:
 - **Required**: the worker must consult named specialist lenses unless the runtime blocks it, then report the accepted fallback.
 - **Blocked**: the coordinator must state why nested consultation is unavailable or inappropriate.
 
-Omitting the field is a brief defect. Nested consultation is scoped, read-only specialist advice unless the coordinator assigns explicit file ownership. Lead workers may request child edit ownership, but must not grant it themselves. User decisions, dependency changes, irreversible changes, and scope expansion must route to the coordinator.
+Missing the field is a brief defect. Nested consultation is scoped, read-only specialist advice unless the coordinator assigns explicit file ownership. Child consults inherit the lead worker's file scope, style files, return protocol, and stop conditions. The lead worker owns child briefs, synthesis, cleanup, and consultation decision reporting. Lead workers may request child edit ownership, but must route the request to the coordinator and must not grant it themselves. User decisions, dependency changes, irreversible changes, and scope expansion must route to the coordinator.
 
-## Briefs and Returns
-
-Every dispatch brief must contain: **Goal**, **Product intent**, **Context**, **Style files to load**, **File scope**, **Nested consultation**, **Checkpoints / return conditions**, **Collaboration mode**, **Done when**, and **Out of scope**.
+Workers must return concise evidence, not raw dumps: **Changed / found**, **Verified**, **Consultation decision**, **Questions / blockers**, **Assumptions**, and **Residual risk**. Each field must cite evidence: changed files or findings; verification commands, screenshots, expected outputs, or why verification was impossible; consulted specialists with route mode (native, routed, or unavailable) and one-line findings, or a concrete no-consultation rationale; decisions needed; best-guess assumptions; and specific remaining risks.
 
 Sub-agents must surface questions with a best-guess assumption when ambiguity affects correctness, scope, API or data shape, user-visible behavior, dependency choice, or verification strategy. The brief must say whether the agent may continue under that assumption or must stop for a routed answer.
 
+For load-bearing questions, include the needed decision, best-guess assumption, risk if wrong, recommended decision, and whether work can continue safely without an answer.
+
 Use precise modal verbs: **must** is mandatory, **should** is preferred with stated exceptions, and **may** grants permission. Replace vague qualifiers such as "adequate", "as appropriate", "sufficient", "timely", and "TBD" with measurable criteria or delete them.
 
-Workers must return: **Changed / found**, **Verified**, **Consultation decision**, **Questions / blockers**, **Assumptions**, and **Residual risk**. Each field must be evidence-backed: changed files or findings; commands, screenshots, expected outputs, or why verification was impossible; specialists consulted or concrete no-consultation rationale; decisions needed; best-guess assumptions; specific remaining risks.
-
-When a worker returns a load-bearing question, the coordinator must stop the affected work and route the question to the user or another agent when the answer affects correctness, scope, API or data shape, user-visible behavior, dependency choice, verification strategy, permissions, or irreversible work. The coordinator must continue the worker under the stated assumption only when the next step stays reversible, stays in scope, does not change dependencies or public behavior, and the return names the assumption, supporting evidence, and the risk if the assumption is wrong. The coordinator must record the uncertainty for synthesis.
+When a worker returns a load-bearing question, the coordinator must stop the affected work and route the question to the user or another agent when the answer affects correctness, scope, API or data shape, user-visible behavior, dependency choice, verification strategy, permissions, or irreversible work. The coordinator must continue the worker under the stated assumption only when the next step stays reversible and in scope, avoids dependency or public-behavior changes, and the return names the assumption, supporting evidence, and the risk if the assumption is wrong. The coordinator must record the uncertainty for synthesis.
 
 ## Synthesis and Gate
 
 The coordinator must consolidate worker outputs, resolve contradictions, and preserve uncertainty. Agreement raises confidence; disagreement identifies a load-bearing assumption. Do not break ties by vote when arguments differ.
 
-Gate each loop against the spec, local conventions, verification evidence, scope discipline, and the Core Contract. If the gate fails, send specific feedback through the loop: what failed, why, and what passing looks like. Human feedback comes only after the coordinator can name what changed, what was checked, and what remains uncertain.
+Gate each loop against the spec, local conventions, verification evidence, scope discipline, and the Core Contract. If the gate fails, send specific feedback through the loop: what failed, why, and what passing looks like. Human feedback comes only after the coordinator can name what changed, what was checked, and what remains uncertain. The coordinator must also name how every review finding was addressed or explicitly deferred with rationale. In repeated loops, the last pass must have no fix-now findings unless a blocker remains explicit.
 
 Required consultation missing fails the gate unless the runtime blocked it and the coordinator recorded the accepted fallback. Allowed consultation skipped passes only when the no-consultation rationale names what the specialist lens would check, why that lens is unlikely to change the answer, and what breaks if the assumption is wrong. Reject vague rationales such as "simple", "straightforward", or "not needed."
 
 Track the failing gate dimension for each loop. If the same dimension fails twice after targeted feedback, stop automatic iteration and escalate by changing the spec, strategy, topology, specialist mix, or by asking the user. A third pass requires a materially different next attempt.
+
+Treat these failure modes as gate failures: scope expansion, incomplete questions that omit decision/risk/recommendation/safe-continue judgment, raw dump returns without synthesis, premature peer convergence before independent judgment, and verification gaps.
 
 ## Style and Verification
 
@@ -114,7 +117,6 @@ Sub-agents must load the relevant file before work:
 - Test changes: also `profile:core/styles/testing.md`
 - Prose/docs/copy: `profile:core/styles/prose.md`
 - UI changes: also `profile:core/styles/interaction-design.md`
-- Coordinated implementation or team playbook: `profile:core/pipelines/coordination.md`
 - Review teams: `profile:core/primitives/personas.md`
 
 After workspace-modifying workers return, dispatch a style correction worker that reads the diff and relevant style file, then directly edits mechanical violations. The stylist must not change logic or behavior. The coordinator verifies the final output.
@@ -163,7 +165,6 @@ Paths in this File Map are relative to the profile root. This file is shared acr
 | `core/styles/interaction-design.md` | UI and interaction standards |
 | `core/primitives/personas.md` | Reviewer and specialist roster |
 | `core/primitives/tools.md` | Tool-specific dispatch affordances |
-| `core/pipelines/coordination.md` | Coordinated worker/team playbook |
 | `core/pipelines/code-review.md` | Medium+ changes, security, public APIs, large diffs |
 | `core/pipelines/commit.md` | Commit staging, message, and push protocol |
 | `core/pipelines/expert-consultation.md` | Domain questions and speculative phrasing |

@@ -39,7 +39,6 @@ core/                                # universal markdown content
 │   ├── personas.md                  # reviewer/expert roster
 │   └── tools.md                     # claude/codex/gemini affordances
 └── pipelines/
-    ├── coordination.md              # coordinated worker/team playbook
     ├── code-review.md               # multi-phase persona review
     ├── commit.md                    # commit staging and push protocol
     ├── expert-consultation.md       # single specialist dispatch

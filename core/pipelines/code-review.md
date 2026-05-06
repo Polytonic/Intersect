@@ -56,4 +56,4 @@ Dispatch fixes from consensus findings, then repeat Phases 1-3. **Default cap:**
 - Instruct all agents to think deeply and thoroughly, using as many tokens as needed.
 - Test empirically when possible (e.g., remove cargo-culted values and verify the code still works).
 - Shared context (scope, files changed, diff stat) should be written once and referenced by all agents, not re-discovered per agent.
-- **Agent prompt construction**: Brief each persona per `core/agents.md` and the `core/pipelines/coordination.md` Worker Brief. Include the relevant style files so agents check against the actual standards: `core/styles/implementation.md` for code, `core/styles/testing.md` for tests, and `core/styles/interaction-design.md` for UI. Same shared context for all agents, distinct focus lens for each.
+- **Agent prompt construction**: Brief each persona per the `core/agents.md` dispatch contract. Include the relevant style files so agents check against the actual standards: `core/styles/implementation.md` for code, `core/styles/testing.md` for tests, and `core/styles/interaction-design.md` for UI. Use one shared context for all agents and a distinct focus lens for each.
