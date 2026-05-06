@@ -1,67 +1,59 @@
 # Intersect
 
-Single source of truth for AI-tool preferences shared across Claude Code, Codex CLI, and Gemini CLI. Named after [The Intersect](https://chuck.fandom.com/wiki/The_Intersect) from *Chuck*: one flash, instant download of every preference into the right place on every machine.
+Single source of truth for AI-tool preferences shared across Claude Code, Codex CLI, and Gemini CLI.
 
 ## Quickstart
 
 ```sh
-# Installation
 git clone https://github.com/Polytonic/Intersect.git
-cd Intersect && ./bin/intersect install
+cd Intersect
+./bin/intersect install
 intersect link
+intersect doctor
 ```
 
 ## Usage
+
 ```sh
 intersect <command>
-    doctor                diagnose CLI install, link symlinks, tool availability
-    update                git pull --ff-only the repo (no need to cd)
+    doctor                diagnose CLI install, symlinks, and tool availability
+    update                update this repo with git pull --ff-only
     link [TOOL...]        symlink config files into ~/.<tool>/
     unlink [TOOL...]      remove config symlinks pointing into this repo
-    install [DIR]         symlink intersect onto PATH (default: /usr/local/bin)
-    uninstall [DIR]       remove the PATH symlink
+    install [DIR]         symlink intersect into a PATH directory (default: /usr/local/bin)
+    uninstall [DIR]       remove that PATH symlink
 ```
 
-`TOOL` is one or more of `all`, `claude`, `codex`, `gemini`. Both `install` and `link` are idempotent. Both `uninstall` and `unlink` only touch symlinks they own; real files are left alone.
+`TOOL` is one or more of `all`, `claude`, `codex`, `gemini`. `install` and `link` are idempotent. `uninstall` and `unlink` only touch symlinks they own.
 
 ## Layout
 
-```
-core/                                # universal markdown content
-├── agents.md                        # coordinator profile entrypoint
-├── claude.md                        # Claude wrapper (@-imports core/agents.md only)
-├── styles/
-│   ├── implementation.md            # coding, debugging, formatting
-│   ├── interaction-design.md        # UI behavior, accessibility
-│   ├── prose.md                     # copy, writing, documentation style
-│   └── testing.md                   # test design standards
-├── primitives/
-│   ├── personas.md                  # reviewer/expert roster
-│   └── tools.md                     # claude/codex/gemini affordances
-└── pipelines/
-    ├── code-review.md               # multi-phase persona review
-    ├── commit.md                    # commit staging and push protocol
-    ├── expert-consultation.md       # single specialist dispatch
-    ├── competitive-implementation.md  # divergent then converge ("red/blue")
-    ├── cross-model-consultation.md  # Codex/Gemini second opinion
-    └── verification.md              # check discovery and execution
+```text
+core/
+  agents.md              shared coordinator profile
+  claude.md              Claude wrapper that imports agents.md
+  standards/             implementation, interaction design, prose, testing
+  primitives/            personas and runtime tool mappings
+  pipelines/             review, commit, consultation, verification workflows
 
-tools/                               # per-CLI machine config
-├── claude/
-│   ├── settings.json
-│   └── statusline.sh
-├── codex/config.toml
-└── gemini/settings.json
+tools/
+  claude/                Claude settings and statusline
+  codex/config.toml      Codex settings
+  gemini/settings.json   Gemini settings
 
-bin/
-├── intersect                        # CLI
-├── test.sh                          # deterministic install/link/doctor tests
-└── verify-ai.sh                     # live, opt-in AI config verification
+bin/intersect            install, link, unlink, doctor, update CLI
+
+test/
+  cli.sh                 deterministic install/link/doctor tests
+  verify-ai.sh           opt-in provider-backed AI verification
+  readme.md              detailed AI verification commands
 ```
 
-## Symlink map
+Use `profile:<path>` for Intersect-owned standards, primitives, and pipelines. Use `workspace:<path>` for target project files. Unprefixed paths in task briefs refer to the active workspace. The active profile root is the parent directory of the loaded `core/` directory; if an agent cannot locate it, it must stop and ask.
 
-| Symlink | → Repo file |
+## Symlink Map
+
+| Symlink | Repo file |
 |---|---|
 | `~/.claude/CLAUDE.md` | `core/claude.md` |
 | `~/.claude/settings.json` | `tools/claude/settings.json` |
@@ -70,114 +62,38 @@ bin/
 | `~/.gemini/GEMINI.md` | `core/agents.md` |
 | `~/.gemini/settings.json` | `tools/gemini/settings.json` |
 
-`settings.local.json` is intentionally not symlinked. Per Anthropic's documented intent, `.local.json` is for machine-specific overrides that stay outside version control.
+Runtime state stays in each tool's config directory. `settings.local.json` is not symlinked because it is machine-local.
 
-All runtime state (sessions, history, sqlite, caches, auth tokens) stays put in each tool's config directory. Nothing here touches it.
+## Verification
 
-## Claude statusline
-
-`tools/claude/statusline.sh` renders compact usage bars:
-
-```text
-Claude 5h [###-----] 39% 7d [#-------] 15% | Codex D [##------] 25% W [##------] 20%
-```
-
-Claude percentages come from Claude Code's statusline payload when rate-limit data is present. Codex percentages use `@ccusage/codex` cost data against explicit budgets: set `CODEX_DAILY_BUDGET_USD` and `CODEX_WEEKLY_BUDGET_USD` in the Claude environment. The weekly Codex bar is trailing seven calendar days. Without those budgets, Codex prints `--%` instead of inventing a denominator. The Codex report is cached for 300 seconds by default.
-
-<details>
-<summary><strong>Why lowercase repo files?</strong></summary>
-
-Two reasons, one aesthetic and one technical:
-
-1. The lowercase convention reads less like shouting.
-2. Codex CLI auto-discovers project-level `AGENTS.md` files. If `Intersect/AGENTS.md` were uppercase, running Codex inside this repo would double-load it (project AGENTS.md plus the symlinked global one). Lowercase prevents the collision while the destination symlink (`~/.codex/AGENTS.md`) keeps the case Codex expects. macOS APFS is case-insensitive by default, so the collision risk exists only on case-sensitive volumes (or other OSes), but the lowercase convention costs nothing and removes the risk wherever it exists.
-
-</details>
-
-## Styles, primitives, and pipelines
-
-The repo has three referenced layers below `agents.md`:
-
-- **Styles** (`core/styles/`): standards loaded by workers and reviewers: implementation, interaction design, prose, and testing.
-- **Primitives** (`core/primitives/`): reusable capabilities and lenses, loaded when the File Map or a brief names them.
-- **Pipelines** (`core/pipelines/`): composed workflows loaded when the File Map or the task trigger points to them.
-
-`core/agents.md` is the shared entry point. Its File Map indexes all three directories.
-
-Use `profile:<path>` for Intersect-owned styles, primitives, and pipelines. Use `workspace:<path>` for target project files.
-
-The active profile root is the parent directory of the `core/` directory that contains the loaded profile file. Unprefixed paths in user briefs refer to the active workspace unless the brief explicitly sets another root. If the active profile root cannot be located, stop and ask. Do not fall back to the workspace root.
-
-Adding a new pipeline: create `profile:core/pipelines/<name>.md` describing trigger, steps, and synthesis. Reference primitives by `profile:<path>`. Update the File Map in `profile:core/agents.md` to list it.
-
-Adding a new style: create `profile:core/styles/<name>.md` describing the standard and when to load it. Update the File Map and Style File Loading list in `profile:core/agents.md`.
-
-Adding a new primitive: create `profile:core/primitives/<name>.md`. Update the File Map in `profile:core/agents.md`. Pipelines reference primitives by `profile:<path>`.
-
-## Tool compatibility notes
-
-- **Claude Code** reads `~/.claude/CLAUDE.md` and resolves `@import` paths relative to the importing file. `core/claude.md` imports only `@./agents.md` at startup. Styles, primitives, and pipelines are referenced by the File Map and loaded by the agent when needed.
-- **Codex CLI** reads `~/.codex/AGENTS.md`. No `@import` syntax. Styles, primitives, and pipelines are referenced by the File Map and loaded by the agent when needed.
-- **Gemini CLI** reads `~/.gemini/GEMINI.md` by default. Supports `@file.md` imports (relative or absolute). This repo links Gemini to `core/agents.md`; styles, primitives, and pipelines are referenced by the File Map and loaded by the agent when needed.
-
-## Verifying the setup
-
-Three layers of verification, each catching a different kind of failure:
-
-### 1. State (`intersect doctor`)
+Pick the narrow check for the file you changed:
 
 ```sh
 intersect doctor
+bash test/cli.sh
+test/verify-ai.sh pickup codex
+test/verify-ai.sh behavior claude
+test/verify-ai.sh paths claude codex gemini
 ```
 
-Read-only inspection of current state: repo file presence, CLI install on PATH, every expected link symlink, tool availability with versions. Exits 0 when all is well, 1 when issues are found.
+`intersect doctor` checks the installed CLI, expected symlinks, and tool availability. `bash test/cli.sh` runs deterministic CLI tests in a temp `HOME`; run it after changes to `bin/intersect`. `test/verify-ai.sh` runs live provider checks; do not run it in CI or pre-commit. See [`test/readme.md`](test/readme.md) for the full AI verification command table.
 
-### 2. Logic (`bin/test.sh`)
+## Agent Notes
 
-```sh
-bash bin/test.sh
-```
+`core/agents.md` is the shared entry point. Claude starts from `core/claude.md`, which imports `core/agents.md`; Codex and Gemini link directly to `core/agents.md`. Standards, primitives, and pipelines are loaded when the File Map or a task brief names them.
 
-Sandboxed in a temp `HOME` so it never touches your real `~/.claude` etc. Exercises the install/uninstall/link/unlink/doctor logic deterministically. Run after any change to `bin/intersect`. Exits non-zero on failure.
+For changes in this repo:
 
-### 3. Live AI verification (`bin/verify-ai.sh`)
-
-```sh
-bin/verify-ai.sh
-bin/verify-ai.sh behavior
-bin/verify-ai.sh pickup codex
-bin/verify-ai.sh behavior claude
-bin/verify-ai.sh paths claude codex gemini
-```
-
-Opt-in provider-backed smoke checks for Claude, Codex, and Gemini. With no tool arguments, the script detects the current CLI from explicit runtime environment markers and runs only that tool. `pickup` checks that each selected CLI can see the linked global config from a temp directory outside this repo. `behavior` sends a synthetic profile-recognition and format prompt that forbids tools, file inspection, commands, subagents, agents, and workspace changes. It is not a full delegation execution test. The script mechanically grades required phrases and structure, including `Delegation tree`, `Worker briefs`, `Worker returns`, `Abort criteria`, `Nested consultation: Required`, `Nested consultation: Allowed`, `Consultation decision:`, `same gate dimension`, and `fails twice`.
-
-`paths` creates a workspace decoy at `core/styles/interaction-design.md`. It then checks that `profile:core/styles/interaction-design.md` resolves to the Intersect profile file whose first H2 is `Interaction Design`.
-
-If the script does not detect exactly one current CLI, `bin/verify-ai.sh` prints usage and exits 2. Cross-tool diagnostics require explicit tool names, for example `bin/verify-ai.sh pickup claude codex gemini`. Tool selection works in every mode, for example `bin/verify-ai.sh pickup codex`, `bin/verify-ai.sh behavior claude`, and `bin/verify-ai.sh paths codex`.
-
-These checks depend on live provider access and the local CLI session state. Auth/login failures, restricted session directories, sandbox permissions, provider outages, and timeouts can fail the run before the model behavior is evaluated. The script prints classified diagnostics where practical and keeps logs in the printed log directory outside the tested temp project. On failure, it preserves both directories. On full success, it removes both directories. Do not run this in CI or pre-commit.
-
-See [`test.md`](test.md) for the executable check and manual command table.
-
-## For AI agents working in this repo
-
-Source of truth for AI-tool preferences. After any change:
-
-- Edits to `core/`: run the matching AI verification command from [`test.md`](test.md) for the affected tool.
-- Edits to `bin/intersect`: run `bash bin/test.sh`.
+- Edits to `core/`: run the matching AI verification command from [`test/readme.md`](test/readme.md).
+- Edits to `bin/intersect`: run `bash test/cli.sh`.
 - Any edit: run `intersect doctor`.
 
-Tool-owned config is exclusive under `tools/`: Claude may edit `tools/claude/**`, Codex may edit `tools/codex/**`, and Gemini may edit `tools/gemini/**`. Do not edit another CLI's `tools/<tool>/` files unless the user explicitly asks for that config change. Shared content under `core/`, docs, and scripts is cross-tool.
+Tool-owned config is scoped under `tools/`: Claude may edit `tools/claude/**`, Codex may edit `tools/codex/**`, and Gemini may edit `tools/gemini/**`. Shared content under `core/`, docs, and scripts is cross-tool.
 
-Do not edit `.claude/settings.local.json` (gitignored, machine-local). Within `tools/codex/config.toml`, avoid editing `[projects.*]`, `[marketplaces.*]`, or `[tui.*]`; Codex re-creates those per machine and they should not travel.
+Within `tools/codex/config.toml`, avoid editing `[projects.*]`, `[marketplaces.*]`, or `[tui.*]`. Codex may recreate those sections per machine, and symlinked writes can propagate through git.
 
-## Adding new content
+## Updating
 
-Fork the repo, edit files in your fork. Edits flow through the symlinks immediately, so the next CLI session picks them up without further action. Commit and push to your fork, then `intersect update` on other machines.
+Edit files in your fork. Symlinked changes apply to the next CLI session. Commit and push to your fork, then run `intersect update` on other machines.
 
-For tool-specific overrides (e.g., a Claude-only behavior that shouldn't apply to Codex), add the rule to `core/claude.md` before the `@./agents.md` line. The wrapper exists to host these without polluting the universal file.
-
-## Known limitations
-
-- `tools/codex/config.toml` is symlinked, which means Codex CLI may write to the file (project trust entries, plugin enablement, marketplace state) and those writes propagate via git. Curate before committing if a write contains absolute paths or per-machine state that shouldn't travel.
+For tool-specific overrides, add the rule to that tool's wrapper or config. For example, Claude-only behavior belongs in `core/claude.md` before the `@./agents.md` import.
