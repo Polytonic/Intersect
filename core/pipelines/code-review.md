@@ -30,6 +30,8 @@ Automatic after any small-scope code change. The goal is fast specialist feedbac
 
 The full persona roster lives in `core/primitives/personas.md`. **User lens is mandatory for every review or discussion task and counts only when launched through `core/agents.md` Dispatch Permission.** **Default cap:** at most 3 personas per phase for routine medium reviews, not counting the user lens or coordinator profile gate. Lift the cap for security-critical work, migrations, public APIs, large diffs, high-blast-radius changes, or explicit deep review requests. Choose based on what the change touches. Skip personas that do not apply (e.g., Internationalization on a single-locale personal site, Product manager on internal tooling with a clear owner). Add task-specific personas when useful (e.g., a **migration auditor** for verification reviews, a **compatibility auditor** for public API changes). **Chaos Monkey QA** is always included when there is a user-facing surface.
 
+For security-critical work, migrations, public APIs, irreversible changes, and high-blast-radius reviews, include model-independent judgment by default. Run the load-bearing persona through different model families or sibling CLIs when the runtime permits it. Synthesize only after each reviewer has formed an independent judgment. If the runtime blocks model diversity, record the missing independence and the residual risk.
+
 ## Phase 1: Individual review
 
 Launch one agent per persona in parallel. Each reviews independently without seeing other agents' findings. One persona = one agent, do not batch multiple reviewers into a single agent. Individual agents think deeper within their specialty.
@@ -52,7 +54,7 @@ Dispatch fixes from consensus findings, then repeat Phases 1-3. **Default cap:**
 
 ## Execution notes
 
-- Tool affordances for parallel persona dispatch: see `core/primitives/tools.md`. Claude Code uses the Agent tool with subagent types. Codex CLI uses native subagents or agent continuation when the runtime exposes them. Use one-shot `codex exec` child CLI only when native dispatch is unavailable. Gemini uses parallel `gemini -p` invocations. The pattern is the same regardless of mechanism.
+- For parallel persona dispatch and model-independent judgment, see `core/primitives/tools.md`. Claude Code uses the Agent tool with subagent types. Codex CLI uses native subagents or agent continuation when the runtime exposes them. Use one-shot `codex exec` child CLI only when native dispatch is unavailable. Gemini uses parallel `gemini -p` invocations. The pattern is the same regardless of mechanism.
 - Instruct all agents to think deeply and thoroughly, using as many tokens as needed.
 - Test empirically when possible (e.g., remove cargo-culted values and verify the code still works).
 - Shared context (scope, files changed, diff stat) should be written once and referenced by all agents, not re-discovered per agent.

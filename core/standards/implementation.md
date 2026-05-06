@@ -24,7 +24,7 @@ Debugging is hypothesis-driven, not stab-in-the-dark. Treat each bug as a scient
 - **Symptoms are not causes**: The first thing that fails is rarely the actual bug. A null pointer crash is a symptom; the cause is whatever invariant got violated three layers up. Trace to root.
 - **Instrument before changing**: Don't apply a fix until you've directly observed the broken state. Logs, prints, breakpoints, debugger inspection. If you can't see the bug happening, you can't be sure your fix addresses it.
 - **State hypotheses explicitly**: "I think X because Y, so if I change Z I expect W." Predicting the result forces calibration. A surprising result means the model is wrong, and that is a finding, not a setback.
-- **Stuck more than 30 minutes? Escalate**: Rubber-duck explicitly, delegate to a debugging-focused worker, or invoke Cross-Model Consultation. Repeating what you've already tried has low yield.
+- **Stuck more than 30 minutes? Escalate**: Rubber-duck explicitly, delegate to a debugging-focused worker, or route model-independent consultation through the active advisory or review path. Repeating what you've already tried has low yield.
 
 ## Code Style
 - **Avoid cryptic abbreviations**: Use full words (`message` not `msg`, `result` not `res`, `response` not `resp`). Standard ecosystem abbreviations are acceptable when readers expect them (`id`, `url`, `ctx`, `err`, `i`, `x`, `y`, `fn`, `args`, `params`, `config`). Do not abbreviate domain concepts, project-specific names, or one-off locals. When in doubt, prefer the full word. **Reason:** the goal is readability, not a closed whitelist. Community idioms aid readability; ad-hoc abbreviations harm it.

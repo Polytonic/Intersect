@@ -15,8 +15,8 @@ Each AI coding CLI is a primitive that pipelines can dispatch work to. They diff
 - **Subagent patterns**:
   - **Explore**: Read-only codebase search. Maps to the delegate-exploration guardrail in `core/agents.md`. Use for open-ended discovery that would otherwise pollute main context with raw results. Specify thoroughness: "quick", "medium", or "very thorough."
   - **Plan**: Software architect agent. Use to draft medium+ plan proposals when planning requires exploration (reading multiple files, surveying architecture). Keeps exploration out of main context.
-  - **general-purpose**: Default for implementation, code changes, and tasks needing the full tool set. Use for persona agents in code review and competitive implementation.
-  - **Worktree isolation**: `isolation: "worktree"` gives an agent its own git worktree. Use for competitive implementation (agents must not see each other's work) and speculative changes that shouldn't touch the working tree until approved.
+  - **general-purpose**: Default for implementation, code changes, and tasks needing the full tool set. Use for persona agents in code review and independent implementation variants.
+  - **Worktree isolation**: `isolation: "worktree"` gives an agent its own git worktree. Use for independent implementation variants where agents must not see each other's work. Use for speculative changes that shouldn't touch the working tree until approved.
   - **Background dispatch**: `run_in_background: true` dispatches work without blocking. Use when the coordinator can keep moving while the agent works, but still must collect checkpoint returns before synthesis or gate. Foreground (default) when the agent's output informs the next action.
   - **Model selection**: `model` parameter selects reasoning depth per agent. Opus for medium+ review personas, architecture, security. Sonnet for small exploration and mechanical checks. Haiku for high-volume, low-stakes parallel tasks. Default to the cheapest model that produces equivalent output.
 - **When to dispatch**: Primary CLI on personal/home machines. Default for multi-agent reviews and parallel work. Choose for tasks needing tool diversity or deep reasoning.
@@ -38,7 +38,7 @@ Each AI coding CLI is a primitive that pipelines can dispatch work to. They diff
 - **Subagent runtime adapter**: Follow `core/agents.md` Dispatch Permission. Prefer native subagent spawn or agent continuation when the Codex runtime exposes either primitive. Codex harnesses may require a direct active-request trigger before native subagent spawning. `AGENTS.md` can record the desired policy, but does not itself satisfy that trigger. If implementation delegation is mandatory and permission is denied or unavailable, stop and report the constraint instead of implementing inline.
 - **Local evidence, 2026-05-05**: `codex features list` shows `multi_agent` enabled. `codex --help` exposes `exec`, `review`, `resume`, `fork`, and experimental `cloud`. `codex exec --help` exposes one-shot non-interactive execution and `codex exec resume`. The checked help output does not show an automatic subagent-spawn setting or an `AGENTS.md` override for explicit user-trigger policy.
 - **Memory**: Persistent memory at `~/.codex/memories/`. Stores task-scoped rollout summaries, user preferences, and reusable knowledge.
-- **When to dispatch**: Cross-model consultation, second opinion on architecture decisions. Primary CLI in environments where Claude Code is unavailable (e.g., work-mandated tooling). When running there, treat Codex as the home base; the pipelines and personas apply identically.
+- **When to dispatch**: Model-independent consultation and second opinions on architecture decisions. Primary CLI in environments where Claude Code is unavailable (e.g., work-mandated tooling). When running there, treat Codex as the home base; the pipelines and personas apply identically.
 
 ## Gemini CLI (`gemini`)
 
@@ -53,7 +53,7 @@ Each AI coding CLI is a primitive that pipelines can dispatch work to. They diff
 
 ## Composing tools
 
-The Cross-Model Consultation pipeline (`core/pipelines/cross-model-consultation.md`) describes when and how to dispatch work across multiple tools simultaneously. The Code Review pipeline (`core/pipelines/code-review.md`) can dispatch persona reviews across tools when model independence is valuable (e.g., the Security reviewer running on both Claude and Codex catches threats neither would alone).
+`core/agents.md`, `core/pipelines/expert-consultation.md`, and `core/pipelines/code-review.md` decide when to dispatch across tools. This file describes the mechanics. Use sibling CLIs to diversify model judgment for advisory, review, and discussion work when irreversible decisions, security risk, context limits, or stuck debugging make independence valuable.
 
 ## Continuation and Routing
 

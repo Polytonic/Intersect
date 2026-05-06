@@ -64,7 +64,7 @@ Selection signals: language/framework/config/runtime -> implementation or review
 
 One persona per reviewer agent. Independent reviewers must form judgment before seeing peer findings. Do not batch independent reviewers into one prompt when separate judgment matters.
 
-Use the dispatch topology that matches the dependency graph: fan out independent scopes or lenses, hand off sequential dependencies through coordinator synthesis, use phased loops for repeated rounds, and run speculative parallel work when competing approaches can reveal the better path. Runtime mappings live in `profile:core/primitives/tools.md`.
+Choose dispatch topology from the trigger and dependency graph. Fan out independent scopes or lenses. Hand off sequential dependencies through coordinator synthesis. Use phased loops for repeated rounds. Run speculative parallel work when competing approaches can expose load-bearing tradeoffs. Use model-independent passes when irreversible decisions, security risk, context limits, or stuck debugging need a second judgment source. Runtime mappings live in `profile:core/primitives/tools.md`.
 
 The coordinator routes questions, checkpoints, peer findings, and user decisions unless a direct peer mechanism exists. Direct peer mechanisms must still return through coordinator synthesis, scope control, and final gate.
 
@@ -168,6 +168,4 @@ Paths in this File Map are relative to the profile root. This file is shared acr
 | `core/pipelines/code-review.md` | Medium+ changes, security, public APIs, large diffs |
 | `core/pipelines/commit.md` | Commit staging, message, and push protocol |
 | `core/pipelines/expert-consultation.md` | Domain questions and speculative phrasing |
-| `core/pipelines/competitive-implementation.md` | Design tension and exploration |
-| `core/pipelines/cross-model-consultation.md` | Irreversible decisions and stuck debugging |
 | `core/pipelines/verification.md` | Check discovery and execution after code/config/content changes |
