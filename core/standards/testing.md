@@ -1,4 +1,4 @@
-# Testing Style
+# Testing Standard
 
 Load this file before writing, modifying, or reviewing tests. Contains test design standards. Load `core/pipelines/verification.md` when deciding which checks to run.
 

@@ -15,7 +15,7 @@ Identify what to run for the change scope:
 - **Type and lint checks** (mypy, flake8, eslint, tsc, clippy, `go vet`, etc.) for any code change.
 - **Unit and integration tests** in the affected modules.
 - **Project-specific verifiers** (e.g., `intersect doctor`, custom health checks, end-to-end smokes).
-- **AI verification commands** if the project has them (per project-local CLAUDE.md, AGENTS.md, or test.md).
+- **AI verification commands** if the project has them (per project-local CLAUDE.md, AGENTS.md, or test/readme.md).
 
 Project-local files often document the right checks; read them first.
 

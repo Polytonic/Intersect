@@ -1,6 +1,6 @@
-# Implementation Style
+# Implementation Standard
 
-Load this file before writing or modifying code. Contains coding philosophy, debugging methodology, and code formatting rules. Load `core/styles/testing.md` when writing, modifying, or reviewing tests.
+Load this file before writing or modifying code. Contains coding philosophy, debugging methodology, and code formatting rules. Load `core/standards/testing.md` when writing, modifying, or reviewing tests.
 
 ## Languages & Stack
 - Primary working languages: C++, Python, TypeScript

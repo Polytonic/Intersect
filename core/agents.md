@@ -76,9 +76,9 @@ After synthesis, the coordinator must close completed agents unless imminent con
 
 ## Dispatch Contract
 
-Every dispatch brief must contain: **Role**, **Goal**, **Product intent**, **Context**, **Style files to load**, **File scope**, **Nested consultation**, **Checkpoints / return conditions**, **Collaboration mode**, **Done when**, and **Out of scope**.
+Every dispatch brief must contain: **Role**, **Goal**, **Product intent**, **Context**, **Standards to load**, **File scope**, **Nested consultation**, **Checkpoints / return conditions**, **Collaboration mode**, **Done when**, and **Out of scope**.
 
-Field contents must be concrete. **Role** names the persona or specialist lens. **Goal** names the output the worker owns. **Product intent** states why the output matters to the user. **Context** gives relevant files, current state, constraints, and assumptions. **Style files to load** lists required docs. **File scope** names files the worker may inspect or edit. **Checkpoints / return conditions** says when to stop, ask, or report. **Collaboration mode** names the routing pattern. **Done when** gives observable pass/fail criteria. **Out of scope** names files, behavior, or cleanup the worker must not touch.
+Field contents must be concrete. **Role** names the persona or specialist lens. **Goal** names the output the worker owns. **Product intent** states why the output matters to the user. **Context** gives relevant files, current state, constraints, and assumptions. **Standards to load** lists required docs. **File scope** names files the worker may inspect or edit. **Checkpoints / return conditions** says when to stop, ask, or report. **Collaboration mode** names the routing pattern. **Done when** gives observable pass/fail criteria. **Out of scope** names files, behavior, or cleanup the worker must not touch.
 
 Every implementation brief must include **Nested consultation**:
 
@@ -86,7 +86,7 @@ Every implementation brief must include **Nested consultation**:
 - **Required**: the worker must consult named specialist lenses unless the runtime blocks it, then report the accepted fallback.
 - **Blocked**: the coordinator must state why nested consultation is unavailable or inappropriate.
 
-Missing the field is a brief defect. Nested consultation is scoped, read-only specialist advice unless the coordinator assigns explicit file ownership. Child consults inherit the lead worker's file scope, style files, return protocol, and stop conditions. The lead worker owns child briefs, synthesis, cleanup, and consultation decision reporting. Lead workers may request child edit ownership, but must route the request to the coordinator and must not grant it themselves. User decisions, dependency changes, irreversible changes, and scope expansion must route to the coordinator.
+Missing the field is a brief defect. Nested consultation is scoped, read-only specialist advice unless the coordinator assigns explicit file ownership. Child consults inherit the lead worker's file scope, standards, return protocol, and stop conditions. The lead worker owns child briefs, synthesis, cleanup, and consultation decision reporting. Lead workers may request child edit ownership, but must route the request to the coordinator and must not grant it themselves. User decisions, dependency changes, irreversible changes, and scope expansion must route to the coordinator.
 
 Workers must return concise evidence, not raw dumps: **Changed / found**, **Verified**, **Consultation decision**, **Questions / blockers**, **Assumptions**, and **Residual risk**. Each field must cite evidence: changed files or findings; verification commands, screenshots, expected outputs, or why verification was impossible; consulted specialists with route mode (native, routed, or unavailable) and one-line findings, or a concrete no-consultation rationale; decisions needed; best-guess assumptions; and specific remaining risks.
 
@@ -110,18 +110,18 @@ Track the failing gate dimension for each loop. If the same dimension fails twic
 
 Treat these failure modes as gate failures: scope expansion, incomplete questions that omit decision/risk/recommendation/safe-continue judgment, raw dump returns without synthesis, premature peer convergence before independent judgment, and verification gaps.
 
-## Style and Verification
+## Standards and Verification
 
-Sub-agents must load the relevant file before work:
-- Code changes: `profile:core/styles/implementation.md` and `profile:core/styles/prose.md`. Literate block headers and intent comments are prose; assume both apply unless the task is a narrow mechanical edit with no prose surface.
-- Test changes: also `profile:core/styles/testing.md`
-- Prose/docs/copy: `profile:core/styles/prose.md`
-- UI changes: also `profile:core/styles/interaction-design.md`
+Sub-agents must load the relevant standard before work:
+- Code changes: `profile:core/standards/implementation.md` and `profile:core/standards/prose.md`. Literate block headers and intent comments are prose; assume both apply unless the task is a narrow mechanical edit with no prose surface.
+- Test changes: also `profile:core/standards/testing.md`
+- Prose/docs/copy: `profile:core/standards/prose.md`
+- UI changes: also `profile:core/standards/interaction-design.md`
 - Review teams: `profile:core/primitives/personas.md`
 
-After workspace-modifying workers return, dispatch a style correction worker that reads the diff and relevant style file, then directly edits mechanical violations. The stylist must not change logic or behavior. The coordinator verifies the final output.
+After workspace-modifying workers return, dispatch a standards correction worker that reads the diff and relevant standard, then directly edits mechanical violations. The standards worker must not change logic or behavior. The coordinator verifies the final output.
 
-The coordinator verifies output without loading full style files:
+The coordinator verifies output without loading full standards:
 - **Code**: compile/lint clean; matches project naming, structure, and patterns; scope is tight; required tests pass; irreversible change is flagged.
 - **Prose**: point is front-loaded; density is high; register fits the audience.
 - **UI**: golden path works in a browser; loading, empty, and error states hold; adjacent features do not regress.
@@ -159,10 +159,10 @@ Paths in this File Map are relative to the profile root. This file is shared acr
 |------|---------|
 | `core/agents.md` | Coordinator profile, always loaded |
 | `core/claude.md` | Claude Code entry point, imports `core/agents.md` only |
-| `core/styles/implementation.md` | Worker-facing implementation style |
-| `core/styles/prose.md` | Worker-facing prose, docs, and copy style |
-| `core/styles/testing.md` | Test design standards |
-| `core/styles/interaction-design.md` | UI and interaction standards |
+| `core/standards/implementation.md` | Worker-facing implementation standard |
+| `core/standards/prose.md` | Worker-facing prose, docs, and copy standard |
+| `core/standards/testing.md` | Test design standard |
+| `core/standards/interaction-design.md` | UI and interaction standard |
 | `core/primitives/personas.md` | Reviewer and specialist roster |
 | `core/primitives/tools.md` | Tool-specific dispatch affordances |
 | `core/pipelines/code-review.md` | Medium+ changes, security, public APIs, large diffs |

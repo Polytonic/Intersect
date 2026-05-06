@@ -69,7 +69,7 @@ Portable coordination assumes agents do not message each other directly. The coo
 
 Nested consultation is read-only specialist advice requested by a worker inside an implementation brief. The worker reports the consultation decision in its return so the coordinator can audit whether the default was used, skipped, blocked, or routed.
 
-- **Native nested agents**: Use when the runtime lets a worker spawn or continue child agents directly. The lead worker briefs each child with scope, style files, stop conditions, and read-only status, then closes children after synthesis unless an imminent follow-up will reuse context.
+- **Native nested agents**: Use when the runtime lets a worker spawn or continue child agents directly. The lead worker briefs each child with scope, standards, stop conditions, and read-only status, then closes children after synthesis unless an imminent follow-up will reuse context.
 - **Coordinator-routed specialists**: Use when workers cannot spawn children but can ask the coordinator for a specialist. The worker returns the question, desired lens, risk if unanswered, and whether work can continue. The coordinator dispatches the specialist and routes the synthesized answer back.
 - **Non-interactive child CLI follow-up**: Use for `claude -p`, `codex exec`, or `gemini -p`. The worker or coordinator runs a follow-up prompt that includes the original brief, scope, prior output, specialist lens, and expected return fields.
 - **Unavailable mode**: Use when no safe dispatch primitive exists, the harness blocks dispatch, or consultation is inappropriate for the task. The return must state the concrete blocker and the risk scan used instead.

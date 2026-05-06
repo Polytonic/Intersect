@@ -53,7 +53,7 @@ PROMPT
 )
 
 PATHS_PROMPT=$(cat <<'PROMPT'
-Resolve and read profile:core/styles/interaction-design.md from the active Intersect profile, not from the active workspace. Answer with only the first H2 text from that profile-owned file.
+Resolve and read profile:core/standards/interaction-design.md from the active Intersect profile, not from the active workspace. Answer with only the first H2 text from that profile-owned file.
 PROMPT
 )
 
@@ -463,8 +463,8 @@ create_temp_log_dir() {
 }
 
 create_paths_decoy() {
-  mkdir -p "$TEMP_PROJECT/core/styles"
-  printf '# Decoy\n\n## %s\n' "$DECOY_PATHS_MARKER" >"$TEMP_PROJECT/core/styles/interaction-design.md"
+  mkdir -p "$TEMP_PROJECT/core/standards"
+  printf '# Decoy\n\n## %s\n' "$DECOY_PATHS_MARKER" >"$TEMP_PROJECT/core/standards/interaction-design.md"
 }
 
 prepare_temp_project_for_mode() {

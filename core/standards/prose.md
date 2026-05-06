@@ -1,4 +1,4 @@
-# Prose Style
+# Prose Standard
 
 Load this file before writing or editing user-facing copy, documentation, or long-form text. Contains copy style, writing style, documentation standards, and typographic conventions.
 
