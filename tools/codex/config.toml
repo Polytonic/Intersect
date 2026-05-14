@@ -1,8 +1,10 @@
-model = "gpt-5.4"
+model = "gpt-5.5"
 model_reasoning_effort = "xhigh"
+personality = "friendly"
+sandbox_mode = "workspace-write"
 
-[plugins."browser-use@openai-bundled"]
-enabled = true
+[agents]
+max_depth = 2
 
 [plugins."documents@openai-primary-runtime"]
 enabled = true
@@ -16,3 +18,10 @@ enabled = true
 [features]
 memories = true
 prevent_idle_sleep = true
+js_repl = true
+chronicle = true
+terminal_resize_reflow = true
+goals = true
+
+[tui]
+status_line = ["model-with-reasoning", "current-dir", "model", "git-branch", "run-state", "context-remaining", "context-used", "five-hour-limit", "weekly-limit"]
