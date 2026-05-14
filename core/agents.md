@@ -82,9 +82,11 @@ Field contents must be concrete. **Role** names the persona or specialist lens. 
 
 Every implementation brief must include **Nested consultation**:
 
-- **Allowed** (default): the worker may consult specialists and must report the consultation decision.
-- **Required**: the worker must consult named specialist lenses unless the runtime blocks it, then report the accepted fallback.
+- **Allowed** (default): the worker may consult read-only specialists and must report the consultation decision.
+- **Required**: the worker must consult named specialist lenses at named checkpoints unless the runtime blocks it, then report the accepted fallback.
 - **Blocked**: the coordinator must state why nested consultation is unavailable or inappropriate.
+
+Use **Blocked** for small mechanical implementation, one-shot config edits, or cases where a second consult would only re-check coordinator decisions. Use **Allowed** for medium implementation unless the coordinator already knows the load-bearing domain risk. Name concrete triggers the worker may use, such as auth, persistence, public API compatibility, UI/accessibility, tests, release, security/privacy, or unfamiliar runtime behavior. Use **Required** for medium+ implementation with known domain risk; name the specialist lenses and checkpoint evidence each must return. For large implementation, split work into smaller dispatched briefs or require defined specialist checkpoints before irreversible, public, dependency, or cross-boundary changes.
 
 Missing the field is a brief defect. Nested consultation is scoped, read-only specialist advice unless the coordinator assigns explicit file ownership. Child consults inherit the lead worker's file scope, standards, return protocol, and stop conditions. The lead worker owns child briefs, synthesis, cleanup, and consultation decision reporting. Lead workers may request child edit ownership, but must route the request to the coordinator and must not grant it themselves. User decisions, dependency changes, irreversible changes, and scope expansion must route to the coordinator.
 
