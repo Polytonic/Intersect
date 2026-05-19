@@ -3,8 +3,8 @@ set -euo pipefail
 
 # Configuration
 
-EXPECTED_PICKUP_MARKER="Coordinator Profile"
-EXPECTED_PATHS_MARKER="Interaction Design"
+EXPECTED_PICKUP_MARKER="Coordinator"
+EXPECTED_PATHS_MARKER="Coordinator"
 DECOY_PATHS_MARKER="Workspace Decoy Path"
 KNOWN_MODES=("pickup" "behavior" "paths")
 KNOWN_TOOLS=("claude" "codex" "gemini")
@@ -28,58 +28,93 @@ modify workspace state. Do not describe actions as completed. Produce a compact
 static template that demonstrates the required labels and phrases.
 
 Return only these sections:
-- Delegation tree
-- Worker briefs
-- Worker returns
-- Abort criteria
+- Brief fields
+- Subagent returns
+- Consultation policy
+- Escalation criteria
 
 Required exact words/phrases:
-- Nested consultation
-- Required
-- Allowed
-- Consultation decision
-- native
-- routed
-- unavailable
-- same gate dimension
+- Role
+- Goal
+- Task
+- Context
+- Scope
+- Inputs
+- Outputs
+- Examples
+- Done when
+- Downstream
+- Reasoning
+- Changed/found
+- Verified
+- Consulted
+- Questions/blockers
+- Residual risk
+- User lens
+- same dimension
 - fails twice
 
-Every worker brief must include "Nested consultation:" with Required or Allowed.
-Include at least one Required worker and one Allowed worker. Every worker return
-must include "Consultation decision:" and classify the consultation route as
-native, routed, or unavailable. Abort criteria must include the exact phrases
-"same gate dimension" and "fails twice".
+Every subagent brief must include these fields in order: "Role:", "Goal:",
+"Task:", "Context:", "Scope:", "Inputs:", "Outputs:", "Examples:",
+"Done when:", "Downstream:", and "Reasoning:".
+Every subagent return must include "Changed/found:", "Verified:", "Consulted:",
+"Questions/blockers:", and "Residual risk:" fields. Consultation policy must
+name the User lens. Escalation criteria must include the exact phrases "same
+dimension" and "fails twice".
 PROMPT
 )
 
 PATHS_PROMPT=$(cat <<'PROMPT'
-Resolve and read profile:core/standards/interaction-design.md from the active Intersect profile, not from the active workspace. Answer with only the first H2 text from that profile-owned file.
+Resolve profile:core/agents.md from the active Intersect profile, not from the active workspace. Answer with only the first H1 text from that profile-owned file. Do not read core/subagents/*.md.
 PROMPT
 )
 
 REQUIRED_BEHAVIOR_SUBSTRINGS=(
-  "Nested consultation"
-  "Required"
-  "Allowed"
-  "Consultation decision"
-  "native"
-  "routed"
-  "unavailable"
-  "same gate dimension"
+  "Role"
+  "Goal"
+  "Task"
+  "Context"
+  "Scope"
+  "Inputs"
+  "Outputs"
+  "Examples"
+  "Done when"
+  "Downstream"
+  "Reasoning"
+  "Changed/found"
+  "Verified"
+  "Consulted"
+  "Questions/blockers"
+  "Residual risk"
+  "User lens"
+  "same dimension"
   "fails twice"
 )
 
 REQUIRED_BEHAVIOR_SECTIONS=(
-  "Delegation tree"
-  "Worker briefs"
-  "Worker returns"
-  "Abort criteria"
+  "Brief fields"
+  "Subagent returns"
+  "Consultation policy"
+  "Escalation criteria"
 )
 
 REQUIRED_BEHAVIOR_STRUCTURES=(
-  "Nested consultation: Required"
-  "Nested consultation: Allowed"
-  "Consultation decision:"
+  "Role:"
+  "Goal:"
+  "Task:"
+  "Context:"
+  "Scope:"
+  "Inputs:"
+  "Outputs:"
+  "Examples:"
+  "Done when:"
+  "Downstream:"
+  "Reasoning:"
+  "Changed/found:"
+  "Verified:"
+  "Consulted:"
+  "Questions/blockers:"
+  "Residual risk:"
 )
 
 
@@ -463,8 +498,8 @@ create_temp_log_dir() {
 }
 
 create_paths_decoy() {
-  mkdir -p "$TEMP_PROJECT/core/standards"
-  printf '# Decoy\n\n## %s\n' "$DECOY_PATHS_MARKER" >"$TEMP_PROJECT/core/standards/interaction-design.md"
+  mkdir -p "$TEMP_PROJECT/core"
+  printf '# %s\n' "$DECOY_PATHS_MARKER" >"$TEMP_PROJECT/core/agents.md"
 }
 
 prepare_temp_project_for_mode() {

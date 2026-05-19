@@ -322,8 +322,11 @@ doctor_check_repo_files() {
   # Markdown content under core/ is enumerated dynamically so adding a new
   # primitive or pipeline does not require editing this list. Tool config
   # files are still hand-maintained because they are few and slow-changing.
-  local repo_files
-  mapfile -t repo_files < <(cd "$REPO_DIR" && find core -name '*.md' -type f | sort)
+  local repo_files=()
+  local repo_file
+  while IFS= read -r repo_file; do
+    repo_files+=("$repo_file")
+  done < <(cd "$REPO_DIR" && find core -name '*.md' -type f | sort)
   repo_files+=(
     "tools/claude/settings.json"
     "tools/claude/statusline.sh"

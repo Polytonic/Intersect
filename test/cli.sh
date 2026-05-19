@@ -12,6 +12,25 @@ INTERSECT="$REPO_DIR/bin/intersect"
 TEST_HOME="$(mktemp -d)"
 trap 'rm -rf "$TEST_HOME"' EXIT
 
+EXPECTED_PROFILE_ROUTES=(
+  "profile:core/subagents/research.md"
+  "profile:core/subagents/design.md"
+  "profile:core/subagents/coding.md"
+  "profile:core/subagents/testing.md"
+  "profile:core/subagents/writing.md"
+  "profile:core/subagents/reviewing.md"
+  "profile:core/subagents/commit.md"
+)
+
+EXPECTED_LINK_MAP=(
+  ".claude/CLAUDE.md|core/claude.md"
+  ".claude/settings.json|tools/claude/settings.json"
+  ".codex/AGENTS.md|core/agents.md"
+  ".codex/config.toml|tools/codex/config.toml"
+  ".gemini/GEMINI.md|core/agents.md"
+  ".gemini/settings.json|tools/gemini/settings.json"
+)
+
 if [[ -t 1 ]]; then
   C_PASS=$'\033[0;32m'
   C_FAIL=$'\033[0;31m'
@@ -60,6 +79,52 @@ test_link_creates_settings_symlinks() {
   HOME="$TEST_HOME" "$INTERSECT" link >/dev/null
   assert_symlink "$TEST_HOME/.codex/config.toml" "$REPO_DIR/tools/codex/config.toml" \
     "link creates ~/.codex/config.toml → tools/codex/config.toml"
+}
+
+test_link_creates_declared_symlink_map() {
+  fresh_home
+  HOME="$TEST_HOME" "$INTERSECT" link >/dev/null
+  local spec dest_rel source_rel actual missing=""
+
+  for spec in "${EXPECTED_LINK_MAP[@]}"; do
+    dest_rel="${spec%%|*}"
+    source_rel="${spec##*|}"
+    if [[ ! -L "$TEST_HOME/$dest_rel" ]]; then
+      missing="$missing missing:~/$dest_rel"
+      continue
+    fi
+    actual="$(readlink "$TEST_HOME/$dest_rel")"
+    if [[ "$actual" != "$REPO_DIR/$source_rel" ]]; then
+      missing="$missing wrong:~/$dest_rel→$actual"
+    fi
+  done
+
+  if [[ -z "$missing" ]]; then
+    pass "link creates declared symlink map"
+  else
+    fail "declared symlink map" "$missing"
+  fi
+}
+
+test_profile_routes_point_to_existing_files() {
+  local route rel missing=""
+
+  for route in "${EXPECTED_PROFILE_ROUTES[@]}"; do
+    rel="${route#profile:}"
+    if [[ ! -f "$REPO_DIR/$rel" ]]; then
+      missing="$missing missing:$rel"
+      continue
+    fi
+    if ! grep -Fq "\`$route\`" "$REPO_DIR/core/agents.md"; then
+      missing="$missing unreferenced:$route"
+    fi
+  done
+
+  if [[ -z "$missing" ]]; then
+    pass "profile subagent routes point to existing files"
+  else
+    fail "profile subagent routes" "$missing"
+  fi
 }
 
 test_link_is_idempotent() {
@@ -123,6 +188,18 @@ test_install_through_symlink_resolves_repo_dir() {
     pass "doctor via PATH symlink resolves REPO_DIR correctly"
   else
     fail "doctor via symlink" "doctor reported issues when invoked through symlinked CLI"
+  fi
+}
+
+test_system_bash_doctor_runs_after_repo_file_enumeration() {
+  fresh_home
+  HOME="$TEST_HOME" "$INTERSECT" link >/dev/null
+  local output
+  output="$(HOME="$TEST_HOME" /bin/bash "$INTERSECT" doctor 2>&1 || true)"
+  if echo "$output" | grep -q "All systems go"; then
+    pass "system bash doctor runs past repo-file enumeration"
+  else
+    fail "system bash doctor" "expected clean doctor output, got: $output"
   fi
 }
 
@@ -211,11 +288,14 @@ test_unknown_tool_errors_cleanly() {
 
 test_link_creates_expected_symlinks
 test_link_creates_settings_symlinks
+test_link_creates_declared_symlink_map
+test_profile_routes_point_to_existing_files
 test_link_is_idempotent
 test_link_per_tool_filtering
 test_unlink_refuses_to_remove_real_files
 test_unlink_removes_only_our_symlinks
 test_install_through_symlink_resolves_repo_dir
+test_system_bash_doctor_runs_after_repo_file_enumeration
 test_install_is_idempotent
 test_uninstall_refuses_to_remove_foreign_symlinks
 test_update_errors_when_repo_is_not_git

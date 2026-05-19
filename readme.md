@@ -32,9 +32,7 @@ intersect <command>
 core/
   agents.md              shared coordinator profile
   claude.md              Claude wrapper that imports agents.md
-  standards/             implementation, interaction design, prose, testing
-  primitives/            personas and runtime tool mappings
-  pipelines/             review, commit, consultation, verification workflows
+  subagents/             coding, commit, design, research, reviewing, testing, writing
 
 tools/
   claude/                Claude settings and statusline
@@ -49,7 +47,7 @@ test/
   readme.md              detailed AI verification commands
 ```
 
-Use `profile:<path>` for Intersect-owned standards, primitives, and pipelines. Use `workspace:<path>` for target project files. Unprefixed paths in task briefs refer to the active workspace. The active profile root is the parent directory of the loaded `core/` directory; if an agent cannot locate it, it must stop and ask.
+Use `profile:<path>` for Intersect-owned subagents. Use `workspace:<path>` for target project files. Unprefixed paths in task briefs refer to the active workspace. The active profile root is the parent directory of the loaded `core/` directory; if an agent cannot locate it, it must stop and ask.
 
 ## Symlink Map
 
@@ -80,12 +78,13 @@ test/verify-ai.sh paths claude codex gemini
 
 ## Agent Notes
 
-`core/agents.md` is the shared entry point. Claude starts from `core/claude.md`, which imports `core/agents.md`; Codex and Gemini link directly to `core/agents.md`. Standards, primitives, and pipelines are loaded when the File Map or a task brief names them.
+`core/agents.md` is the shared entry point. Claude starts from `core/claude.md`, which imports `core/agents.md`; Codex and Gemini link directly to `core/agents.md`. Subagent files are runtime profiles referenced by `profile:core/subagents/*.md`; the coordinator passes those routes without copying full subagent configs into its own context. Each subagent embeds its consultation roster inline.
 
 For changes in this repo:
 
 - Edits to `core/`: run the matching AI verification command from [`test/readme.md`](test/readme.md).
 - Edits to `bin/intersect`: run `bash test/cli.sh`.
+- Edits to subagent routing or the symlink map: run `bash test/cli.sh`.
 - Any edit: run `intersect doctor`.
 
 Tool-owned config is scoped under `tools/`: Claude may edit `tools/claude/**`, Codex may edit `tools/codex/**`, and Gemini may edit `tools/gemini/**`. Shared content under `core/`, docs, and scripts is cross-tool.
