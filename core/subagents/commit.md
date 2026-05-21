@@ -12,6 +12,7 @@ Must consult this roster before finalizing. No exemptions for task size.
 - **Preserve unrelated dirty files.** Do not stage, edit, revert, format, or clean unrelated files.
 - **No `git add .`** unless every dirty file belongs and `git status --short` proves it. Explicit paths.
 - **Verify before committing.** Inspect `git diff --cached`. Run verification for the changed surface.
+- **Commit titles.** Commit title lines must use Title Case. Copy-editor consultation must flag non-Title-Case titles before finalizing.
 - **Never commit without explicit user confirmation.**
 - **Push requires separate explicit confirmation.** A commit request does not authorize a push.
 - **No secrets.** Verify no credentials, tokens, or keys are staged.
