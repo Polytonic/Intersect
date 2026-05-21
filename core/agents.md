@@ -93,6 +93,7 @@ The coordinator verifies by reading subagent returns against the brief's Done-wh
 - **UI**: Golden path tested in browser. Loading, empty, error states hold.
 - **Review/advisory/workflow**: User lens included, or absence reported.
 - **All work**: Subagent verified own work. Each downstream subagent received and addressed previous subagent's output.
+- **Closeout**: Track every launched subagent until closed. After final status and verification or downstream handoff, close it unless the next delegated task will reuse that same agent immediately. Verify is incomplete while a finished subagent remains open without a stated reason.
 - **Consultation**: Reported consultation matches the brief and risk. Routine implementation may report risk scan only. Review, advisory, workflow, and high-risk work require independent consultation.
 
 "Looks good" is not a gate pass. On failure, specific feedback: what, why, what passing looks like. Same dimension fails twice → escalate to the user.
