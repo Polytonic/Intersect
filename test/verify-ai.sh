@@ -20,20 +20,25 @@ SKIP_COUNT=0
 FAIL_COUNT=0
 
 BEHAVIOR_PROMPT=$(cat <<'PROMPT'
-Synthetic profile-recognition and format check only. This is not an active
-implementation request and not a real coordinator workflow.
+Synthetic profile-recognition and evidence-contract check only. This is not an
+active implementation request and not a real coordinator workflow.
 
 Do not use tools, inspect files, run commands, launch subagents or agents, or
 modify workspace state. Do not describe actions as completed. Produce a compact
-static template that demonstrates the required labels and phrases.
+static template that demonstrates the required labels, evidence, and phrases.
 
 Return only these sections:
 - Brief fields
-- Subagent returns
+- Subagent evidence
 - Consultation policy
+- Domain gates
+- Commit policy
 - Escalation criteria
 
 Required exact words/phrases:
+- When requirements are unclear
+- instructions conflict
+- stop and ask before routing or acting
 - Role
 - Goal
 - Task
@@ -50,6 +55,46 @@ Required exact words/phrases:
 - Consulted
 - Questions/blockers
 - Residual risk
+- delegation manifest
+- profile route
+- resolved path
+- profile H1
+- model/effort if known
+- isolation/context mode
+- agent id if known
+- external-service permission state
+- commands
+- inspected sources
+- exact results
+- skipped gates with reasons
+- delegated agent id
+- separate-session identifier
+- launch a separate consultant agent or session
+- Do not write the consultant answer yourself
+- consultant brief
+- question or scope
+- relevant files or context
+- expected return
+- prompt scope
+- changes made in response
+- why none were made
+- If the runtime cannot launch a separate consultant
+- blocked reason
+- evidence, owner, and next action
+- acceptable or blocked
+- Domain gates
+- Do not invent domain-specific acceptance criteria after dispatch
+- All work
+- Each downstream subagent received and addressed previous subagent's output
+- required process steps
+- route commit requests through the Commit profile
+- Commit profile
+- State Machine
+- Title Case
+- required body
+- Copy editor
+- Push Gate
+- separate explicit confirmation
 - User lens
 - same dimension
 - fails twice
@@ -58,9 +103,32 @@ Every subagent brief must include these fields in order: "Role:", "Goal:",
 "Task:", "Context:", "Scope:", "Inputs:", "Outputs:", "Examples:",
 "Done when:", "Downstream:", and "Reasoning:".
 Every subagent return must include "Changed/found:", "Verified:", "Consulted:",
-"Questions/blockers:", and "Residual risk:" fields. Consultation policy must
-name the User lens. Escalation criteria must include the exact phrases "same
-dimension" and "fails twice".
+"Questions/blockers:", and "Residual risk:" fields.
+"Changed/found:" must begin with a delegation manifest naming profile route,
+resolved path, profile H1, model/effort if known, isolation/context mode,
+agent id if known, and external-service permission state.
+"Verified:" must name commands, inspected sources, exact results, and skipped
+gates with reasons. "Consulted:" must name a delegated agent id or
+separate-session identifier, prompt scope, findings, and changes made in
+response or why none were made. It must require the worker to launch a separate
+consultant agent or session, avoid writing the consultant answer itself, and
+send a consultant brief naming the persona, question or scope, relevant files or
+context, and expected return. If the runtime cannot launch a separate
+consultant, it must report a blocked reason.
+"Questions/blockers:" must state None or list each blocker with evidence, owner,
+and next action. "Residual risk:" must state None or name uncertainty, evidence,
+and why it is acceptable or blocked.
+Consultation policy must name the User lens, required process steps,
+separate consultant launch requirement, no-self-authored-answer rule, consultant
+brief contents, and the blocker when separate consultant launch cannot be
+performed.
+Domain gates must state not to invent domain-specific acceptance criteria after
+dispatch. All work must state that each downstream subagent received and
+addressed previous subagent output.
+Commit policy must route commit requests through the Commit profile, require the
+State Machine, Title Case title, required body, Copy editor consultation, and
+Push Gate with separate explicit confirmation. Escalation criteria must include
+the exact phrases "same dimension" and "fails twice".
 PROMPT
 )
 
@@ -70,6 +138,9 @@ PROMPT
 )
 
 REQUIRED_BEHAVIOR_SUBSTRINGS=(
+  "When requirements are unclear"
+  "instructions conflict"
+  "stop and ask before routing or acting"
   "Role"
   "Goal"
   "Task"
@@ -86,6 +157,46 @@ REQUIRED_BEHAVIOR_SUBSTRINGS=(
   "Consulted"
   "Questions/blockers"
   "Residual risk"
+  "delegation manifest"
+  "profile route"
+  "resolved path"
+  "profile H1"
+  "model/effort if known"
+  "isolation/context mode"
+  "agent id if known"
+  "external-service permission state"
+  "commands"
+  "inspected sources"
+  "exact results"
+  "skipped gates with reasons"
+  "delegated agent id"
+  "separate-session identifier"
+  "launch a separate consultant agent or session"
+  "Do not write the consultant answer yourself"
+  "consultant brief"
+  "question or scope"
+  "relevant files or context"
+  "expected return"
+  "prompt scope"
+  "changes made in response"
+  "why none were made"
+  "If the runtime cannot launch a separate consultant"
+  "blocked reason"
+  "evidence, owner, and next action"
+  "acceptable or blocked"
+  "Domain gates"
+  "Do not invent domain-specific acceptance criteria after dispatch"
+  "All work"
+  "Each downstream subagent received and addressed previous subagent's output"
+  "required process steps"
+  "route commit requests through the Commit profile"
+  "Commit profile"
+  "State Machine"
+  "Title Case"
+  "required body"
+  "Copy editor"
+  "Push Gate"
+  "separate explicit confirmation"
   "User lens"
   "same dimension"
   "fails twice"
@@ -93,8 +204,10 @@ REQUIRED_BEHAVIOR_SUBSTRINGS=(
 
 REQUIRED_BEHAVIOR_SECTIONS=(
   "Brief fields"
-  "Subagent returns"
+  "Subagent evidence"
   "Consultation policy"
+  "Domain gates"
+  "Commit policy"
   "Escalation criteria"
 )
 

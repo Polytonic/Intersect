@@ -4,7 +4,8 @@ Scope: copy, docs, comments, commit messages, PR descriptions.
 
 ## Consultation
 
-Must consult this roster before finalizing. No exemptions for task size.
+Consult every listed persona before finalizing. No exemptions for task size.
+For each listed persona, launch a separate consultant agent or session. Do not write the consultant answer yourself. If the runtime cannot launch one, return a blocker.
 
 1. **Domain specialist**: Subject-matter expertise.
 2. **Copy editor**: Style, grammar, phrasing, tone.
@@ -42,4 +43,10 @@ Default: Strunk & White. Code Style and Copy Style overrides win.
 
 ## Return Protocol
 
-Return: **Changed/found**, **Verified** (clarity/accuracy checks), **Consulted** (who, scope, findings, changes made in response), **Questions/blockers**, **Residual risk**.
+Return sections exactly: **Changed/found**, **Verified**, **Consulted**, **Questions/blockers**, **Residual risk**.
+
+- **Changed/found** begins with the delegation manifest: profile route, resolved path, profile H1, model/effort if known, isolation/context mode, agent id if known, external-service permission state. If the profile cannot be loaded, stop and return a load blocker instead.
+- **Verified** includes clarity checks, accuracy checks, inspected sources, exact results, and skipped gates with reasons.
+- **Consulted** includes each required consultant's persona, delegated agent id or separate-session identifier, model/effort if known, isolation/context mode, prompt scope, findings, and changes made in response, or why none were made. Each consultant brief names the persona, question or scope, relevant files or context, and expected return. If the runtime cannot launch a separate consultant, include the blocked reason.
+- **Questions/blockers** states `None` or lists blockers with evidence, owner, and next action.
+- **Residual risk** states `None` or names remaining uncertainty, evidence, and why it is acceptable or blocked.

@@ -9,7 +9,7 @@ Coding standards are execution rules, not taste guidelines.
 - **Named-pattern gate**: Follow these standards unless the brief explicitly names a conflicting local pattern. If the brief names that pattern, follow it. If following these standards would break the existing system and the brief does not name the pattern, stop and return a blocker.
 
 ## Consultation
-Scan this roster before finalizing. Use self-scan only when the brief explicitly says `self-scan` or `routine implementation`. Otherwise request independent consultation. Select the first roster item whose description names the changed surface; select Staff engineer when no item matches.
+Before finalizing, select the first roster item whose description names the changed surface; select Staff engineer when no item matches. Launch that persona as a separate consultant agent or session. Do not write the consultant answer yourself. If the runtime cannot launch one, return a blocker.
 
 1. **Principal engineer**: Subtle bugs, control flow, correctness, cross-language boundaries.
 2. **Language expert**: Idiomatic usage, API misuse, gotchas.
@@ -61,4 +61,10 @@ Hypothesis-driven: hypothesize, test, observe, update.
 
 ## Return Protocol
 
-Return: **Changed/found**, **Verified** (commands, results), **Consulted** (who, scope, findings, changes made in response), **Questions/blockers**, **Residual risk**.
+Return sections exactly: **Changed/found**, **Verified**, **Consulted**, **Questions/blockers**, **Residual risk**.
+
+- **Changed/found** begins with the delegation manifest: profile route, resolved path, profile H1, model/effort if known, isolation/context mode, agent id if known, external-service permission state. If the profile cannot be loaded, stop and return a load blocker instead.
+- **Verified** includes commands, inspected sources, exact results, and skipped gates with reasons.
+- **Consulted** includes each required consultant's persona, delegated agent id or separate-session identifier, model/effort if known, isolation/context mode, prompt scope, findings, and changes made in response, or why none were made. Each consultant brief names the persona, question or scope, relevant files or context, and expected return. If the runtime cannot launch a separate consultant, include the blocked reason.
+- **Questions/blockers** states `None` or lists blockers with evidence, owner, and next action.
+- **Residual risk** states `None` or names remaining uncertainty, evidence, and why it is acceptable or blocked.

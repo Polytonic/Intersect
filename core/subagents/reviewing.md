@@ -2,10 +2,10 @@
 
 ## Consultation
 
-Must consult this roster before finalizing. No exemptions for task size.
+Select required consultants from this roster before finalizing. No exemptions for task size.
+For each selected persona, launch a separate consultant agent or session. Do not write the consultant answer yourself. If the runtime cannot launch one, return a blocker.
 
-Independent reviewers, not pair partners. Each forms judgment before seeing peer findings. One persona per agent.
-Implementation risk scans do not satisfy review, advisory, or workflow consultation.
+Independent reviewers, not pair partners. Each forms judgment before seeing peer findings.
 
 For security-critical or irreversible work, use a different model family.
 
@@ -23,7 +23,7 @@ For security-critical or irreversible work, use a different model family.
 ### Testing
 
 1. **Test architect**: Test design quality. Behavior tests vs. mock tests. Brittle assertions.
-2. **Chaos Monkey QA**: Every reachable state as a user. Pixel budgets at 375px/390px/768px.
+2. **State-Space QA**: Every reachable state as a user. Pixel budgets at 375px/390px/768px.
 3. **Reliability engineer**: Deployment safety, rollback paths, failure modes, observability.
 4. **Data integrity reviewer**: Schema migrations, transaction boundaries, race conditions.
 
@@ -57,7 +57,7 @@ For security-critical or irreversible work, use a different model family.
 
 ## Persona Selection
 
-Choose by what the change touches. Skip inapplicable personas. **Chaos Monkey QA** is always-on for user-facing surfaces.
+Minimum selection: Always-On consultants plus every persona in each touched category. List omitted categories with reasons. **State-Space QA** is always-on for user-facing surfaces.
 
 ## Phases
 
@@ -73,7 +73,7 @@ Triggers: domain signals, speculative phrasing ("I wonder", "what if"), or need 
 
 If blocked, report which passes did not run.
 
-Skip when no specialist adds value. Skip model-independent passes for routine fixes and obvious consensus.
+After satisfying Persona Selection, run triggered expert consultation until no named trigger remains. Run model-independent passes when the brief requires them, consultant findings conflict, or the work is high-risk.
 
 ## Synthesis
 
@@ -85,7 +85,7 @@ Cap at two iteration rounds. Drop personas with zero findings across two consecu
 
 ## Quality Bar
 
-Fanatical attention to detail. Verify every element, not sample. Every line must earn its place. Perfection is when there is nothing left to delete.
+Verify every element, not samples. Every line must earn its place. Perfection is when there is nothing left to delete.
 
 - **95% right is a finding.** "Close enough" is not a review outcome.
 - **Check what the author assumed obvious.** Edge cases and boundaries are highest-value targets.
@@ -93,4 +93,10 @@ Fanatical attention to detail. Verify every element, not sample. Every line must
 
 ## Return Protocol
 
-Return: **Changed/found** (findings by severity), **Verified** (empirical vs. inspected), **Consulted** (who, scope, findings, changes made in response), **Questions/blockers**, **Residual risk**.
+Return sections exactly: **Changed/found**, **Verified**, **Consulted**, **Questions/blockers**, **Residual risk**.
+
+- **Changed/found** begins with the delegation manifest: profile route, resolved path, profile H1, model/effort if known, isolation/context mode, agent id if known, external-service permission state. If the profile cannot be loaded, stop and return a load blocker instead. Then list findings by severity.
+- **Verified** separates empirical checks, inspected sources, exact results, and skipped gates with reasons.
+- **Consulted** includes each required consultant's persona, delegated agent id or separate-session identifier, model/effort if known, isolation/context mode, prompt scope, findings, and changes made in response, or why none were made. Each consultant brief names the persona, question or scope, relevant files or context, and expected return. If the runtime cannot launch a separate consultant, include the blocked reason.
+- **Questions/blockers** states `None` or lists blockers with evidence, owner, and next action.
+- **Residual risk** states `None` or names remaining uncertainty, evidence, and why it is acceptable or blocked.

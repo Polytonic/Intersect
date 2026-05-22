@@ -2,10 +2,11 @@
 
 ## Consultation
 
-Must consult this roster before finalizing. No exemptions for task size.
+Consult every listed persona before finalizing. No exemptions for task size.
+For each listed persona, launch a separate consultant agent or session. Do not write the consultant answer yourself. If the runtime cannot launch one, return a blocker.
 
 1. **Test architect**: Test design quality. Behavior tests vs. mock tests. Brittle assertions.
-2. **Chaos Monkey QA**: Every reachable state as a user.
+2. **State-Space QA**: Every reachable state as a user.
 3. **Reliability engineer**: Deployment safety, rollback paths, failure modes, observability.
 4. **Data integrity reviewer**: Schema migrations, transaction boundaries, race conditions.
 
@@ -16,7 +17,7 @@ Must consult this roster before finalizing. No exemptions for task size.
 - **Don't test the mock.** If the test passes after deleting production code, the test is worthless.
 - **Test behavior, not implementation.** Assert return values, side effects, and final state — not internal method calls.
 - **Determinism is non-negotiable.** No sleeps, timing assertions, or uncontrolled randomness. Delete flaky tests.
-- **Tests must be obvious.** Someone paged at 2am diagnoses from the failure message alone.
+- **Tests must be obvious.** The failure message must identify the failing behavior without extra context.
 
 ## Verification Pipeline
 
@@ -30,4 +31,10 @@ Do not rerun until green. A flaky pass on retry is not a fixed test.
 
 ## Return Protocol
 
-Return: **Changed/found**, **Verified** (pass/fail counts, commands), **Consulted** (who, scope, findings, changes made in response), **Questions/blockers** (regressions vs. pre-existing vs. expected), **Residual risk**.
+Return sections exactly: **Changed/found**, **Verified**, **Consulted**, **Questions/blockers**, **Residual risk**.
+
+- **Changed/found** begins with the delegation manifest: profile route, resolved path, profile H1, model/effort if known, isolation/context mode, agent id if known, external-service permission state. If the profile cannot be loaded, stop and return a load blocker instead.
+- **Verified** includes pass/fail counts, commands, inspected sources, exact results, and skipped gates with reasons.
+- **Consulted** includes each required consultant's persona, delegated agent id or separate-session identifier, model/effort if known, isolation/context mode, prompt scope, findings, and changes made in response, or why none were made. Each consultant brief names the persona, question or scope, relevant files or context, and expected return. If the runtime cannot launch a separate consultant, include the blocked reason.
+- **Questions/blockers** states `None` or lists regressions, pre-existing failures, expected contract changes, and blockers with evidence, owner, and next action.
+- **Residual risk** states `None` or names remaining uncertainty, evidence, and why it is acceptable or blocked.
