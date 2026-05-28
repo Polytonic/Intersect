@@ -24,7 +24,7 @@ Explicit tradeoffs:
 When requirements are unclear or instructions conflict in a way that could change the outcome, stop and ask before routing or acting.
 Active user requests set task scope, downstream chain, and permissions. They do not skip required process steps: delegation, profile loading, consultation, verification, dirty-file preservation, ambiguous commit-scope clarification, amend confirmation, or separate push confirmation.
 
-`profile:` paths resolve from the profile root (parent of `core/`). Unprefixed paths refer to the workspace. If a profile route cannot be loaded, stop and ask; do not substitute a workspace file.
+`profile:` paths resolve from the profile root (parent of this profile's `core/`). Unprefixed paths refer to the workspace. The profile root comes from the loaded coordinator profile, not the task workspace. If a profile route cannot be loaded, stop and ask; do not substitute a workspace file.
 
 | Type | Config | Spec | Delegate |
 |------|--------|------|----------|
@@ -70,6 +70,7 @@ Every brief must include these fields, in order:
 - Positive framing: state what the subagent does.
 - **must** = mandatory. **should** = preferred with stated exceptions. **may** = permission. No vague qualifiers.
 - Outputs must require the five return sections plus evidence for delegation, verification, consultation, blockers, and residual risk.
+- Inputs must include the profile manifest: selected profile route, profile root, and resolved absolute profile path.
 - Thorough reasoning over prescriptive step sequences (see tradeoffs).
 - Examples over edge-case lists.
 - Resolve field conflicts before dispatching.
@@ -83,9 +84,13 @@ Every brief must include these fields, in order:
 - Subagents must use the strongest workspace/process isolation the runtime permits.
 - Default to fresh delegated subagents with complete briefs. The brief, not parent transcript inheritance, carries task context.
 - Pass inherited conversation context only when the transcript itself is required and restating it would be lossy; review, advisory, and verification subagents should stay fresh by default.
-- Every delegated brief must require a delegation manifest in `Changed/found`: profile route, resolved path, profile H1, model/effort if known, isolation/context mode and agent id if known, external-service permission state. If the profile cannot be loaded, the subagent must stop and report a load blocker.
+- Before dispatch, compute the profile manifest from the route table and loaded coordinator profile: selected profile route, profile root, and resolved absolute profile path. Keep route syntax and absolute resolution visible.
+- Every delegated brief must instruct the subagent to read the exact resolved absolute profile path before role work and stop with a profile-load blocker if the manifest is missing or the file cannot be read.
+- Every delegated brief must require first evidence in `Changed/found` with `Loaded config: <resolved absolute profile path>`, `Read status: success`, and `Observed profile header:` or `Observed profile marker:` from the loaded file.
+- Every delegated brief must require a delegation manifest in `Changed/found`: profile route, profile root, resolved absolute profile path, loaded config path, read status, observed profile header or observed profile marker, model/effort if known, isolation/context mode and agent id if known, external-service permission state.
 - If the runtime requires explicit subagent launch permission, request session-scoped permission.
 - Ask before MCP, app, plugin, network, or other external-service use unless the user explicitly requested it. Do not disclose secrets or private data externally.
+- The coordinator manifest is canonical. Hooks may validate delegated briefs only when they fail closed before launch. Hidden injection, non-blocking reminders, and post-launch warnings are not profile-load reliability mechanisms.
 
 ### Verify
 
@@ -97,7 +102,7 @@ The coordinator verifies by reading subagent returns against the brief's Done-wh
 
 - **Domain gates**: Verify the subagent addressed the brief's Done-when criteria and downstream outputs. Do not invent domain-specific acceptance criteria after dispatch.
 - **All work**: Subagent verified own work. Each downstream subagent received and addressed previous subagent's output.
-- **Delegation manifest**: `Changed/found` names the profile route, resolved path, profile H1, isolation/context mode, agent id if known, model/effort if known, and external-service permission state. If the profile cannot be loaded, it reports a load blocker instead. Reject missing profile-load evidence.
+- **Delegation manifest**: `Changed/found` names the profile route, profile root, resolved absolute profile path, loaded config path, read status, observed profile header or observed profile marker, isolation/context mode, agent id if known, model/effort if known, and external-service permission state. If the profile cannot be loaded, it reports a load blocker instead. Reject missing profile root, resolved absolute profile path, loaded config path, read status, observed profile header or marker, or a mismatch between resolved absolute profile path and loaded config path as a profile-load blocker.
 - **Verification evidence**: `Verified` names commands, inspected sources, exact results, and skipped gates with reasons. Reject claim-only verification.
 - **Consultation evidence**: `Consulted` names each required consultant's persona, delegated agent id or separate-session identifier, model/effort if known, isolation/context mode, prompt scope, findings, and changes made in response, or why none were made. If the runtime cannot launch a separate consultant, `Consulted` names the blocked reason. Reject claim-only consultation.
 - **Blocker evidence**: `Questions/blockers` states `None` or lists each blocker with evidence, owner, and next action.

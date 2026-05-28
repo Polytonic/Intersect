@@ -1,5 +1,9 @@
 # Testing Subagent
 
+## Profile Load
+
+Before role work, read the exact resolved absolute profile path from the brief.
+
 ## Consultation
 
 Consult every listed persona before finalizing. No exemptions for task size.
@@ -33,7 +37,7 @@ Do not rerun until green. A flaky pass on retry is not a fixed test.
 
 Return sections exactly: **Changed/found**, **Verified**, **Consulted**, **Questions/blockers**, **Residual risk**.
 
-- **Changed/found** begins with the delegation manifest: profile route, resolved path, profile H1, model/effort if known, isolation/context mode, agent id if known, external-service permission state. If the profile cannot be loaded, stop and return a load blocker instead.
+- **Changed/found** begins with the delegation manifest: profile route, profile root, resolved absolute profile path, loaded config path, read status, observed profile header or observed profile marker, model/effort if known, isolation/context mode, agent id if known, external-service permission state. First evidence must include `Loaded config: <resolved absolute profile path>`, `Read status: success`, and `Observed profile header:` or `Observed profile marker:` from the loaded file. If the manifest is missing, the profile cannot be read, or the loaded config path differs from the resolved absolute profile path, stop and return a profile-load blocker instead.
 - **Verified** includes pass/fail counts, commands, inspected sources, exact results, and skipped gates with reasons.
 - **Consulted** includes each required consultant's persona, delegated agent id or separate-session identifier, model/effort if known, isolation/context mode, prompt scope, findings, and changes made in response, or why none were made. Each consultant brief names the persona, question or scope, relevant files or context, and expected return. If the runtime cannot launch a separate consultant, include the blocked reason.
 - **Questions/blockers** states `None` or lists regressions, pre-existing failures, expected contract changes, and blockers with evidence, owner, and next action.

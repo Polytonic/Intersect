@@ -12,16 +12,6 @@ INTERSECT="$REPO_DIR/bin/intersect"
 TEST_HOME="$(mktemp -d)"
 trap 'rm -rf "$TEST_HOME"' EXIT
 
-EXPECTED_PROFILE_ROUTES=(
-  "profile:core/subagents/research.md"
-  "profile:core/subagents/design.md"
-  "profile:core/subagents/coding.md"
-  "profile:core/subagents/testing.md"
-  "profile:core/subagents/writing.md"
-  "profile:core/subagents/reviewing.md"
-  "profile:core/subagents/commit.md"
-)
-
 EXPECTED_LINK_MAP=(
   ".claude/CLAUDE.md|core/claude.md"
   ".claude/settings.json|tools/claude/settings.json"
@@ -36,8 +26,9 @@ COORDINATOR_EVIDENCE_MARKERS=(
   "Active user requests set task scope, downstream chain, and permissions. They do not skip required process steps: delegation, profile loading, consultation, verification, dirty-file preservation, ambiguous commit-scope clarification, amend confirmation, or separate push confirmation."
   "Commit and push requests route through the Commit profile."
   "Outputs must require the five return sections plus evidence for delegation, verification, consultation, blockers, and residual risk."
-  "Every delegated brief must require a delegation manifest in \`Changed/found\`: profile route, resolved path, profile H1, model/effort if known, isolation/context mode and agent id if known, external-service permission state."
-  "**Delegation manifest**: \`Changed/found\` names the profile route, resolved path, profile H1, isolation/context mode, agent id if known, model/effort if known, and external-service permission state."
+  "Every delegated brief must require first evidence in \`Changed/found\` with \`Loaded config: <resolved absolute profile path>\`, \`Read status: success\`, and \`Observed profile header:\` or \`Observed profile marker:\` from the loaded file."
+  "Every delegated brief must require a delegation manifest in \`Changed/found\`: profile route, profile root, resolved absolute profile path, loaded config path, read status, observed profile header or observed profile marker, model/effort if known, isolation/context mode and agent id if known, external-service permission state."
+  "**Delegation manifest**: \`Changed/found\` names the profile route, profile root, resolved absolute profile path, loaded config path, read status, observed profile header or observed profile marker, isolation/context mode, agent id if known, model/effort if known, and external-service permission state."
   "**Verification evidence**: \`Verified\` names commands, inspected sources, exact results, and skipped gates with reasons."
   "Reject claim-only verification."
   "**Consultation evidence**: \`Consulted\` names each required consultant's persona, delegated agent id or separate-session identifier, model/effort if known, isolation/context mode, prompt scope, findings, and changes made in response, or why none were made."
@@ -56,9 +47,11 @@ COORDINATOR_EVIDENCE_MARKERS=(
 
 SUBAGENT_RETURN_PROTOCOL_MARKERS=(
   "Return sections exactly: **Changed/found**, **Verified**, **Consulted**, **Questions/blockers**, **Residual risk**."
-  "**Changed/found** begins with the delegation manifest: profile route, resolved path, profile H1"
+  "**Changed/found** begins with the delegation manifest: profile route, profile root, resolved absolute profile path, loaded config path, read status, observed profile header or observed profile marker"
+  "First evidence must include \`Loaded config: <resolved absolute profile path>\`, \`Read status: success\`, and \`Observed profile header:\` or \`Observed profile marker:\` from the loaded file."
   "external-service permission state"
-  "If the profile cannot be loaded"
+  "profile cannot be read"
+  "loaded config path differs"
   "**Verified**"
   "exact results"
   "skipped gates with reasons"
@@ -85,6 +78,14 @@ PROFILE_CLEANUP_FORBIDDEN_MARKERS=(
   "self""-scan"
   "routine impl""ementation"
   "risk s""can"
+)
+
+PROFILE_MANIFEST_FORBIDDEN_MARKERS=(
+  "resolved pa""th"
+  "profile H""1"
+  "Expected H""1"
+  "expected H""1"
+  "loaded H""1"
 )
 
 CODING_PROFILE_ASK_FIRST_MARKERS=(
@@ -239,21 +240,55 @@ test_link_creates_declared_symlink_map() {
 }
 
 test_profile_routes_point_to_existing_files() {
-  local route rel missing=""
+  local tick='`' line route_tail route
+  local rel file actual_h1 expected_profile routed_profile found missing=""
+  local expected_profiles=() routed_profiles=()
 
-  for route in "${EXPECTED_PROFILE_ROUTES[@]}"; do
-    rel="${route#profile:}"
-    if [[ ! -f "$REPO_DIR/$rel" ]]; then
-      missing="$missing missing:$rel"
+  for file in "$REPO_DIR"/core/subagents/*.md; do
+    expected_profiles+=("${file#$REPO_DIR/}")
+  done
+
+  while IFS= read -r line; do
+    if [[ "$line" != *"$tick"profile:core/subagents/* ]]; then
       continue
     fi
-    if ! grep -Fq "\`$route\`" "$REPO_DIR/core/agents.md"; then
-      missing="$missing unreferenced:$route"
+
+    route_tail="${line#*"$tick"profile:}"
+    route="profile:${route_tail%%"$tick"*}"
+    if [[ "$route" != profile:core/subagents/*.md ]]; then
+      missing="$missing unsupported:$route"
+      continue
+    fi
+
+    rel="${route#profile:}"
+    routed_profiles+=("$rel")
+    file="$REPO_DIR/$rel"
+    if [[ ! -f "$file" ]]; then
+      missing="$missing missing-file:$rel"
+      continue
+    fi
+
+    IFS= read -r actual_h1 < "$file" || actual_h1=""
+    if [[ "$actual_h1" != "# "* ]]; then
+      missing="$missing h1:$rel actual:$actual_h1"
+    fi
+  done < "$REPO_DIR/core/agents.md"
+
+  for expected_profile in "${expected_profiles[@]}"; do
+    found=0
+    for routed_profile in "${routed_profiles[@]}"; do
+      if [[ "$routed_profile" == "$expected_profile" ]]; then
+        found=1
+        break
+      fi
+    done
+    if [[ "$found" -eq 0 ]]; then
+      missing="$missing missing-route:$expected_profile"
     fi
   done
 
   if [[ -z "$missing" ]]; then
-    pass "profile subagent routes point to existing files"
+    pass "profile subagent routes cover every profile file with readable first-line H1"
   else
     fail "profile subagent routes" "$missing"
   fi
@@ -298,6 +333,51 @@ test_subagent_profiles_require_evidence_returns() {
   fi
 }
 
+test_subagent_profiles_have_profile_load_gate() {
+  local file short missing=""
+  local instruction="Before role work, read the exact resolved absolute profile path from the brief."
+
+  for file in "$REPO_DIR"/core/subagents/*.md; do
+    short="${file#$REPO_DIR/}"
+    if ! awk -v instruction="$instruction" '
+      substr($0, 1, 2) == "# " && !saw_h1 {
+        saw_h1 = 1
+        next
+      }
+      saw_h1 && substr($0, 1, 3) == "## " {
+        if (first_h2 == "") {
+          first_h2 = $0
+          in_profile_load = ($0 == "## Profile Load")
+          next
+        }
+        if (in_profile_load) {
+          in_profile_load = 0
+        }
+        next
+      }
+      in_profile_load && index($0, instruction) { gate = 1 }
+      END { exit(saw_h1 && first_h2 == "## Profile Load" && gate ? 0 : 1) }
+    ' "$file"; then
+      missing="$missing $short missing top Profile Load gate"
+    fi
+
+    if awk -v instruction="$instruction" '
+      $0 == "## Return Protocol" { in_return = 1; next }
+      in_return && substr($0, 1, 3) == "## " { in_return = 0 }
+      in_return && index($0, instruction) { found = 1 }
+      END { exit(found ? 0 : 1) }
+    ' "$file"; then
+      missing="$missing $short keeps Profile Load instruction under Return Protocol"
+    fi
+  done
+
+  if [[ -z "$missing" ]]; then
+    pass "subagent profiles keep profile-load execution gate above return protocol"
+  else
+    fail "subagent profile-load gate placement" "$missing"
+  fi
+}
+
 test_profiles_omit_stale_conflict_and_consultation_exceptions() {
   local file short found missing=""
 
@@ -325,6 +405,30 @@ test_profiles_omit_stale_conflict_and_consultation_exceptions() {
     pass "profiles omit stale conflict and consultation exceptions"
   else
     fail "stale profile cleanup markers" "$missing"
+  fi
+}
+
+test_profiles_omit_stale_manifest_terms() {
+  local file short found missing=""
+
+  for file in "$REPO_DIR/core/agents.md" "$REPO_DIR"/core/subagents/*.md "$REPO_DIR/test/readme.md"; do
+    short="${file#$REPO_DIR/}"
+    found="$(file_containing_markers \
+      "$file" \
+      "$short" \
+      "${PROFILE_MANIFEST_FORBIDDEN_MARKERS[@]}")"
+    if [[ -n "$found" ]]; then
+      if [[ -n "$missing" ]]; then
+        missing="$missing; "
+      fi
+      missing="$missing$found"
+    fi
+  done
+
+  if [[ -z "$missing" ]]; then
+    pass "profiles omit stale manifest terms"
+  else
+    fail "stale manifest terminology" "$missing"
   fi
 }
 
@@ -536,7 +640,9 @@ test_link_creates_declared_symlink_map
 test_profile_routes_point_to_existing_files
 test_coordinator_profile_evidence_gates
 test_subagent_profiles_require_evidence_returns
+test_subagent_profiles_have_profile_load_gate
 test_profiles_omit_stale_conflict_and_consultation_exceptions
+test_profiles_omit_stale_manifest_terms
 test_coding_profile_preserves_ask_first_gates
 test_review_profile_preserves_user_lens
 test_commit_profile_state_machine_and_message_rules

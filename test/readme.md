@@ -18,7 +18,7 @@ With no tool arguments, `test/verify-ai.sh` detects the current CLI from explici
 
 `paths` creates a workspace decoy at `core/agents.md`. It asks for the first H1 in `profile:core/agents.md` and fails if the answer resolves the decoy instead of the profile file. It does not ask the coordinator to read subagent configs.
 
-`test/cli.sh` includes deterministic profile-contract checks. They assert that `core/agents.md` preserves ask-first conflicts, evidence-backed coordinator gates, Domain gates, and All work; every `core/subagents/*.md` return protocol preserves manifest, separate consultant launch, verification, blocker, and residual-risk evidence; stale consultation exceptions stay absent; the Coding profile preserves ask-first blocker gates plus changed-surface consultant selection, Staff engineer fallback, and separate launch directive; and the Commit profile preserves its state machine, Title Case title rule, required message body, copy-editor gate, and separate push confirmation.
+`test/cli.sh` includes deterministic profile-contract checks. They assert that every `core/subagents/*.md` file has a `core/agents.md` profile route, that profile routes resolve to existing files with readable first-line H1 values, and that `core/agents.md` preserves ask-first conflicts, evidence-backed coordinator gates, Domain gates, and All work; every subagent profile keeps profile-load as a top execution gate while the return protocol preserves manifest, separate consultant launch, verification, blocker, and residual-risk evidence; stale consultation exceptions stay absent; the Coding profile preserves ask-first blocker gates plus changed-surface consultant selection, Staff engineer fallback, and separate launch directive; and the Commit profile preserves its state machine, Title Case title rule, required message body, copy-editor gate, and separate push confirmation.
 
 The `test/verify-ai.sh` checks call live providers. Keep them manual; do not run them in CI or pre-commit unless the user explicitly approves live provider calls for that gate. Auth state, session-directory access, sandbox permissions, and provider outages can fail the run before policy behavior is tested. The script classifies auth/login, permission/session-state, timeout, missing marker/assertion, and command-exit failures where practical. On failure, logs in the printed log directory hold the raw CLI output, and the tested temp project is preserved separately. On full success, both directories are removed.
 
@@ -78,10 +78,16 @@ Required exact words/phrases:
 - Consulted
 - Questions/blockers
 - Residual risk
+- Profile Load
+- Before role work, read the exact resolved absolute profile path from the brief.
 - delegation manifest
 - profile route
-- resolved path
-- profile H1
+- profile root
+- resolved absolute profile path
+- loaded config path
+- read status
+- observed profile header
+- observed profile marker
 - model/effort if known
 - isolation/context mode
 - agent id if known
@@ -125,11 +131,17 @@ Required exact words/phrases:
 Every subagent brief must include these fields in order: "Role:", "Goal:",
 "Task:", "Context:", "Scope:", "Inputs:", "Outputs:", "Examples:",
 "Done when:", "Downstream:", and "Reasoning:".
+Every subagent profile must include a top "Profile Load" section with "Before
+role work, read the exact resolved absolute profile path from the brief."
 Every subagent return must include "Changed/found:", "Verified:", "Consulted:",
 "Questions/blockers:", and "Residual risk:" fields.
 "Changed/found:" must begin with a delegation manifest naming profile route,
-resolved path, profile H1, model/effort if known, isolation/context mode,
-agent id if known, and external-service permission state.
+profile root, resolved absolute profile path, loaded config path, read status,
+observed profile header or observed profile marker, model/effort if known,
+isolation/context mode, agent id if known, and external-service permission
+state. Its first evidence must include "Loaded config: <resolved absolute
+profile path>", "Read status: success", and "Observed profile header:" or
+"Observed profile marker:" from the loaded file.
 "Verified:" must name commands, inspected sources, exact results, and skipped
 gates with reasons. "Consulted:" must name a delegated agent id or
 separate-session identifier, prompt scope, findings, and changes made in
