@@ -30,7 +30,8 @@ intersect <command>
 
 ```text
 core/
-  agents.md              shared coordinator profile
+  agents.md              coordinator entry point
+  workflow.md            shared lifecycle and general-worker contract
   claude.md              Claude wrapper that imports agents.md
   subagents/             coding, commit, design, research, reviewing, testing, writing
 
@@ -78,7 +79,7 @@ test/verify-ai.sh paths claude codex gemini
 
 ## Agent Notes
 
-`core/agents.md` is the shared entry point. Claude starts from `core/claude.md`, which imports `core/agents.md`; Codex and Gemini link directly to `core/agents.md`. Subagent files are runtime profiles referenced by `profile:core/subagents/*.md`; the coordinator passes those routes without copying full subagent configs into its own context. Each subagent embeds its consultation roster inline.
+`core/agents.md` is the shared entry point. Claude starts from `core/claude.md`, which imports `core/agents.md`; Codex and Gemini link directly to `core/agents.md`. `core/workflow.md` holds the shared brief, authority, loading, verification, and return contract. Existing `profile:core/subagents/*.md` paths remain entry points and required domain cards. Workers explicitly read the shared workflow and applicable cards; the coordinator passes exact paths without copying their contents. Workers own relevant checks and docs, with fresh verification for consequential changes and targeted terminal specialists for concrete uncertainty.
 
 For changes in this repo:
 
