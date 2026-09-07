@@ -70,12 +70,10 @@ Pick the narrow check for the file you changed:
 ```sh
 intersect doctor
 bash test/cli.sh
-test/verify-ai.sh pickup codex
-test/verify-ai.sh behavior claude
-test/verify-ai.sh paths claude codex gemini
+test/verify-ai.sh codex
 ```
 
-`intersect doctor` checks the installed CLI, expected symlinks, and tool availability. `bash test/cli.sh` runs deterministic CLI tests in a temp `HOME`; run it after changes to `bin/intersect`. `test/verify-ai.sh` runs live provider checks; do not run it in CI or pre-commit. See [`test/readme.md`](test/readme.md) for the full AI verification command table.
+`intersect doctor` checks the installed CLI, expected symlinks, and tool availability. `bash test/cli.sh` runs deterministic CLI tests in a temp `HOME`; run it after changes to `bin/intersect`. `test/verify-ai.sh <tool>` is an optional live profile-loading diagnostic for installation, profile-root, or CLI changes. It is not a routine edit gate; keep it out of CI and pre-commit. See [`test/readme.md`](test/readme.md) for usage and limitations.
 
 ## Agent Notes
 
@@ -83,7 +81,6 @@ test/verify-ai.sh paths claude codex gemini
 
 For changes in this repo:
 
-- Edits to `core/`: run the matching AI verification command from [`test/readme.md`](test/readme.md).
 - Edits to `bin/intersect`: run `bash test/cli.sh`.
 - Edits to subagent routing or the symlink map: run `bash test/cli.sh`.
 - Any edit: run `intersect doctor`.

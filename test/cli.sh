@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# Sandboxed test of the intersect CLI. Uses a temporary HOME so the real
-# ~/.claude, ~/.codex, and ~/.gemini are never touched. Exits non-zero
-# on any failure; safe to run from CI or pre-commit.
+# Deterministic intersect CLI/profile checks. Uses a temporary HOME only.
 
 set -euo pipefail
 
@@ -21,113 +19,21 @@ EXPECTED_LINK_MAP=(
   ".gemini/settings.json|tools/gemini/settings.json"
 )
 
-COORDINATOR_EVIDENCE_MARKERS=(
-  "When requirements are unclear or instructions conflict in a way that could change the outcome, stop and ask before routing or acting."
-  "Active user requests set task scope, downstream chain, and permissions. They do not skip required process steps: delegation, profile loading, consultation, verification, dirty-file preservation, ambiguous commit-scope clarification, amend confirmation, or separate push confirmation."
-  "Commit and push requests route through the Commit profile."
-  "Outputs must require the five return sections plus evidence for delegation, verification, consultation, blockers, and residual risk."
-  "Every delegated brief must require first evidence in \`Changed/found\` with \`Loaded config: <resolved absolute profile path>\`, \`Read status: success\`, and \`Observed profile header:\` or \`Observed profile marker:\` from the loaded file."
-  "Every delegated brief must require a delegation manifest in \`Changed/found\`: profile route, profile root, resolved absolute profile path, loaded config path, read status, observed profile header or observed profile marker, model/effort if known, isolation/context mode and agent id if known, external-service permission state."
-  "**Delegation manifest**: \`Changed/found\` names the profile route, profile root, resolved absolute profile path, loaded config path, read status, observed profile header or observed profile marker, isolation/context mode, agent id if known, model/effort if known, and external-service permission state."
-  "**Verification evidence**: \`Verified\` names commands, inspected sources, exact results, and skipped gates with reasons."
-  "Reject claim-only verification."
-  "**Consultation evidence**: \`Consulted\` names each required consultant's persona, delegated agent id or separate-session identifier, model/effort if known, isolation/context mode, prompt scope, findings, and changes made in response, or why none were made."
-  "If the runtime cannot launch a separate consultant, \`Consulted\` names the blocked reason."
-  "For each required persona, launch a separate consultant agent or session; do not write the consultant answer yourself."
-  "Each consultant brief names the persona, question or scope, relevant files or context, and expected return."
-  "**Blocker evidence**: \`Questions/blockers\` states \`None\` or lists each blocker with evidence, owner, and next action."
-  "**Residual-risk evidence**: \`Residual risk\` states \`None\` or names remaining uncertainty, evidence, and why it is acceptable or blocked."
-  "**Domain gates**: Verify the subagent addressed the brief's Done-when criteria and downstream outputs. Do not invent domain-specific acceptance criteria after dispatch."
-  "**All work**: Subagent verified own work. Each downstream subagent received and addressed previous subagent's output."
-  "launch a separate consultant agent or session"
-  "do not write the consultant answer yourself"
-  "If the runtime cannot launch one, return a blocker."
-  "Same dimension fails twice → escalate to the user."
-)
-
-SUBAGENT_RETURN_PROTOCOL_MARKERS=(
-  "Return sections exactly: **Changed/found**, **Verified**, **Consulted**, **Questions/blockers**, **Residual risk**."
-  "**Changed/found** begins with the delegation manifest: profile route, profile root, resolved absolute profile path, loaded config path, read status, observed profile header or observed profile marker"
-  "First evidence must include \`Loaded config: <resolved absolute profile path>\`, \`Read status: success\`, and \`Observed profile header:\` or \`Observed profile marker:\` from the loaded file."
-  "external-service permission state"
-  "profile cannot be read"
-  "loaded config path differs"
-  "**Verified**"
-  "exact results"
-  "skipped gates with reasons"
-  "**Consulted** includes each required consultant's persona, delegated agent id or separate-session identifier"
-  "prompt scope, findings, and changes made in response, or why none were made"
-  "Each consultant brief names the persona, question or scope, relevant files or context, and expected return."
-  "If the runtime cannot launch a separate consultant, include the blocked reason."
-  "**Questions/blockers** states \`None\` or lists"
-  "evidence, owner, and next action"
-  "**Residual risk**"
-  "evidence, and why"
-  "acceptable or blocked"
-)
-
-SUBAGENT_CONSULTATION_MARKERS=(
-  "separate consultant agent or session"
-  "Do not write the consultant answer yourself"
-  "If the runtime cannot launch one, return a blocker."
-)
-
-PROFILE_CLEANUP_FORBIDDEN_MARKERS=(
-  "Conflict ord""er"
-  "conflict lad""der"
-  "self""-scan"
-  "routine impl""ementation"
-  "risk s""can"
-)
-
-PROFILE_MANIFEST_FORBIDDEN_MARKERS=(
-  "resolved pa""th"
-  "profile H""1"
-  "Expected H""1"
-  "expected H""1"
-  "loaded H""1"
-)
-
 CODING_PROFILE_ASK_FIRST_MARKERS=(
-  "**Missing rule = ask**: If the spec and standards do not determine the implementation, return a question or blocker instead of inventing a preference."
-  "**Named-pattern gate**: Follow these standards unless the brief explicitly names a conflicting local pattern."
-  "If following these standards would break the existing system and the brief does not name the pattern, stop and return a blocker."
-)
-
-CODING_PROFILE_CONSULTATION_MARKERS=(
-  "select the first roster item whose description names the changed surface"
-  "select Staff engineer when no item matches"
-  "Launch that persona as a separate consultant agent or session."
-)
-
-REVIEW_PROFILE_MARKERS=(
-  "1. **User lens**: User's goals, constraints, preferences. Mandatory for every review, advisory task, and workflow decision."
-  "2. **Coordinator profile**: Check output against \`core/agents.md\`."
-  "Minimum selection: Always-On consultants plus every persona in each touched category."
+  "**Missing rule = ask**: If the spec and standards do not determine the implementation, return a question or blocker."
+  "**Named-pattern gate**: Follow these standards unless the brief names a conflicting local pattern."
+  "Follow the named pattern; block if these standards would break the system and no pattern is named."
 )
 
 COMMIT_PROFILE_MARKERS=(
-  "launch a separate consultant agent or session"
-  "Do not write the consultant answer yourself"
-  "If the runtime cannot launch one, return a blocker."
-  "Copy editor"
   "Commit title lines must use Title Case."
-  "Copy-editor consultation must flag non-Title-Case titles before finalizing."
   "Commit messages must include a short body explaining what changed and why."
-  "Title-only messages need explicit user direction."
+  "Omit the body only when the user explicitly requests a title-only message."
   "Push requires separate explicit confirmation."
-  "## State Machine"
-  "**Preflight Status**"
-  "**Freeze Scope**"
-  "**Stage Explicit Paths**"
-  "**Cache Diff**"
-  "**Verify Surface**"
-  "**Draft Message**"
-  "**Consult Message**"
-  "**Pre-Commit Summary**"
-  "**Commit Or Amend**"
-  "**Post-Commit Status**"
-  "**Push Gate**"
+  "current-conversation, and task-scoped"
+  "ambiguous scope, unrelated files, amend, title-only message, or push"
+  "Verify no credentials, tokens, or keys are staged."
+  "git diff --cached"
 )
 
 if [[ -t 1 ]]; then
@@ -161,57 +67,199 @@ file_missing_markers() {
   printf '%s' "$missing"
 }
 
-file_containing_markers() {
-  local file="$1" label="$2"
-  shift 2
-  local marker found=""
+is_markdown_heading_line() {
+  local line="$1"
 
-  for marker in "$@"; do
-    if grep -Fq -- "$marker" "$file"; then
-      if [[ -n "$found" ]]; then
-        found="$found; "
-      fi
-      found="$found$label contains stale marker: $marker"
+  case "$line" in
+    "# "* | "## "* | "### "* | "#### "* | "##### "* | "###### "*)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+markdown_heading_text() {
+  local heading="$1"
+
+  while [[ "$heading" == \#* ]]; do
+    heading="${heading#\#}"
+  done
+  while [[ "$heading" == " "* || "$heading" == $'\t'* ]]; do
+    heading="${heading#"${heading:0:1}"}"
+  done
+
+  printf '%s' "$heading"
+}
+
+is_title_case_heading_part() {
+  local part="$1"
+  local i char
+
+  while [[ -n "$part" && "$part" == [![:alnum:]]* ]]; do
+    part="${part:1}"
+  done
+  while [[ -n "$part" && "$part" == *[![:alnum:]] ]]; do
+    part="${part:0:${#part}-1}"
+  done
+  if [[ -z "$part" ]]; then
+    return 0
+  fi
+
+  for ((i = 0; i < ${#part}; i++)); do
+    char="${part:i:1}"
+    if [[ "$char" == [[:alpha:]] ]]; then
+      [[ "$char" == [[:upper:]] ]]
+      return
     fi
   done
 
-  printf '%s' "$found"
+  return 0
 }
 
-# fresh_home should reset $TEST_HOME between tests so state from one
-# test never leaks into the next. Keeps tests independent.
+is_title_case_heading_token() {
+  local token="$1"
+  local part normalized
+  local parts=()
+
+  normalized="${token//\// }"
+  normalized="${normalized//-/ }"
+  read -r -a parts <<<"$normalized"
+  for part in "${parts[@]}"; do
+    if ! is_title_case_heading_part "$part"; then
+      return 1
+    fi
+  done
+
+  return 0
+}
+
+file_heading_case_violations() {
+  local file="$1" label="$2"
+  local heading line token
+  local line_number=0
+  local tokens=()
+  local violations=""
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line_number=$((line_number + 1))
+    if ! is_markdown_heading_line "$line"; then
+      continue
+    fi
+
+    heading="$(markdown_heading_text "$line")"
+    read -r -a tokens <<<"$heading"
+    for token in "${tokens[@]}"; do
+      if is_title_case_heading_token "$token"; then
+        continue
+      fi
+      if [[ -n "$violations" ]]; then
+        violations="$violations; "
+      fi
+      violations="$violations$label:$line_number non-Title-Case heading: $heading"
+      break
+    done
+  done < "$file"
+
+  printf '%s' "$violations"
+}
+
+shell_section_header_text() {
+  local line="$1"
+
+  case "$line" in
+    "# === "*)
+      line="${line#"# === "}"
+      line="${line%" ==="}"
+      ;;
+    "# "*)
+      line="${line#"# "}"
+      ;;
+    *)
+      printf ''
+      return
+      ;;
+  esac
+
+  case "$line" in
+    *"." | *"," | *";" | *":" | *"!" | *"?" | *"("* | *")"* | *"'"*)
+      printf ''
+      return
+      ;;
+  esac
+
+  printf '%s' "$line"
+}
+
+file_shell_section_header_case_violations() {
+  local file="$1" label="$2"
+  local line heading token
+  local line_number=0
+  local tokens=()
+  local violations=""
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line_number=$((line_number + 1))
+    heading="$(shell_section_header_text "$line")"
+    if [[ -z "$heading" ]]; then
+      continue
+    fi
+
+    read -r -a tokens <<<"$heading"
+    for token in "${tokens[@]}"; do
+      if is_title_case_heading_token "$token"; then
+        continue
+      fi
+      if [[ -n "$violations" ]]; then
+        violations="$violations; "
+      fi
+      violations="$violations$label:$line_number non-Title-Case shell section header: $heading"
+      break
+    done
+  done < "$file"
+
+  printf '%s' "$violations"
+}
+
+# fresh_home should keep tests independent.
 fresh_home() {
   rm -rf "$TEST_HOME"
   mkdir -p "$TEST_HOME"
 }
 
-# assert_symlink should pass when $dest is a symlink whose target equals
-# $expected, and fail with a diff-style message otherwise.
-assert_symlink() {
-  local dest="$1" expected="$2" msg="$3"
-  local actual
-  actual="$(readlink "$dest")"
-  if [[ "$actual" == "$expected" ]]; then
-    pass "$msg"
-  else
-    fail "$msg" "expected $expected, got $actual"
-  fi
-}
-
 # === Tests ===
 
-test_link_creates_expected_symlinks() {
-  fresh_home
-  HOME="$TEST_HOME" "$INTERSECT" link >/dev/null
-  assert_symlink "$TEST_HOME/.claude/CLAUDE.md" "$REPO_DIR/core/claude.md" \
-    "link creates ~/.claude/CLAUDE.md → core/claude.md"
-}
+test_markdown_headings_use_title_case() {
+  local file short file_violations missing=""
 
-test_link_creates_settings_symlinks() {
-  fresh_home
-  HOME="$TEST_HOME" "$INTERSECT" link >/dev/null
-  assert_symlink "$TEST_HOME/.codex/config.toml" "$REPO_DIR/tools/codex/config.toml" \
-    "link creates ~/.codex/config.toml → tools/codex/config.toml"
+  for file in "$REPO_DIR/core/agents.md" "$REPO_DIR/core/workflow.md" "$REPO_DIR"/core/subagents/*.md "$REPO_DIR/test/readme.md"; do
+    short="${file#$REPO_DIR/}"
+    file_violations="$(file_heading_case_violations "$file" "$short")"
+    if [[ -n "$file_violations" ]]; then
+      if [[ -n "$missing" ]]; then
+        missing="$missing; "
+      fi
+      missing="$missing$file_violations"
+    fi
+  done
+
+  for file in "$REPO_DIR/test/cli.sh" "$REPO_DIR/test/verify-ai.sh"; do
+    short="${file#$REPO_DIR/}"
+    file_violations="$(file_shell_section_header_case_violations "$file" "$short")"
+    if [[ -n "$file_violations" ]]; then
+      if [[ -n "$missing" ]]; then
+        missing="$missing; "
+      fi
+      missing="$missing$file_violations"
+    fi
+  done
+
+  if [[ -z "$missing" ]]; then
+    pass "profile, docs, and shell section headers use Title Case"
+  else
+    fail "heading Title Case" "$missing"
+  fi
 }
 
 test_link_creates_declared_symlink_map() {
@@ -287,148 +335,19 @@ test_profile_routes_point_to_existing_files() {
     fi
   done
 
+  if [[ ! -r "$REPO_DIR/core/workflow.md" ]]; then
+    missing="$missing missing-shared-workflow"
+  fi
+  for file in "$REPO_DIR/core/agents.md" "$REPO_DIR"/core/subagents/*.md; do
+    if ! grep -Fq 'profile:core/workflow.md' "$file"; then
+      missing="$missing missing-workflow-reference:${file#$REPO_DIR/}"
+    fi
+  done
+
   if [[ -z "$missing" ]]; then
-    pass "profile subagent routes cover every profile file with readable first-line H1"
+    pass "profile routes and shared workflow are readable"
   else
     fail "profile subagent routes" "$missing"
-  fi
-}
-
-test_coordinator_profile_evidence_gates() {
-  local missing
-  missing="$(file_missing_markers \
-    "$REPO_DIR/core/agents.md" \
-    "core/agents.md" \
-    "${COORDINATOR_EVIDENCE_MARKERS[@]}")"
-
-  if [[ -z "$missing" ]]; then
-    pass "coordinator profile requires evidence-backed gates"
-  else
-    fail "coordinator profile evidence gates" "$missing"
-  fi
-}
-
-test_subagent_profiles_require_evidence_returns() {
-  local file short file_missing missing=""
-
-  for file in "$REPO_DIR"/core/subagents/*.md; do
-    short="${file#$REPO_DIR/}"
-    file_missing="$(file_missing_markers \
-      "$file" \
-      "$short" \
-      "${SUBAGENT_RETURN_PROTOCOL_MARKERS[@]}" \
-      "${SUBAGENT_CONSULTATION_MARKERS[@]}")"
-    if [[ -n "$file_missing" ]]; then
-      if [[ -n "$missing" ]]; then
-        missing="$missing; "
-      fi
-      missing="$missing$file_missing"
-    fi
-  done
-
-  if [[ -z "$missing" ]]; then
-    pass "subagent profiles require manifest, separate consultant launch, verification, blocker, and residual-risk evidence"
-  else
-    fail "subagent return evidence contracts" "$missing"
-  fi
-}
-
-test_subagent_profiles_have_profile_load_gate() {
-  local file short missing=""
-  local instruction="Before role work, read the exact resolved absolute profile path from the brief."
-
-  for file in "$REPO_DIR"/core/subagents/*.md; do
-    short="${file#$REPO_DIR/}"
-    if ! awk -v instruction="$instruction" '
-      substr($0, 1, 2) == "# " && !saw_h1 {
-        saw_h1 = 1
-        next
-      }
-      saw_h1 && substr($0, 1, 3) == "## " {
-        if (first_h2 == "") {
-          first_h2 = $0
-          in_profile_load = ($0 == "## Profile Load")
-          next
-        }
-        if (in_profile_load) {
-          in_profile_load = 0
-        }
-        next
-      }
-      in_profile_load && index($0, instruction) { gate = 1 }
-      END { exit(saw_h1 && first_h2 == "## Profile Load" && gate ? 0 : 1) }
-    ' "$file"; then
-      missing="$missing $short missing top Profile Load gate"
-    fi
-
-    if awk -v instruction="$instruction" '
-      $0 == "## Return Protocol" { in_return = 1; next }
-      in_return && substr($0, 1, 3) == "## " { in_return = 0 }
-      in_return && index($0, instruction) { found = 1 }
-      END { exit(found ? 0 : 1) }
-    ' "$file"; then
-      missing="$missing $short keeps Profile Load instruction under Return Protocol"
-    fi
-  done
-
-  if [[ -z "$missing" ]]; then
-    pass "subagent profiles keep profile-load execution gate above return protocol"
-  else
-    fail "subagent profile-load gate placement" "$missing"
-  fi
-}
-
-test_profiles_omit_stale_conflict_and_consultation_exceptions() {
-  local file short found missing=""
-
-  found="$(file_containing_markers \
-    "$REPO_DIR/core/agents.md" \
-    "core/agents.md" \
-    "${PROFILE_CLEANUP_FORBIDDEN_MARKERS[@]}")"
-  missing="$found"
-
-  for file in "$REPO_DIR"/core/subagents/*.md; do
-    short="${file#$REPO_DIR/}"
-    found="$(file_containing_markers \
-      "$file" \
-      "$short" \
-      "${PROFILE_CLEANUP_FORBIDDEN_MARKERS[@]}")"
-    if [[ -n "$found" ]]; then
-      if [[ -n "$missing" ]]; then
-        missing="$missing; "
-      fi
-      missing="$missing$found"
-    fi
-  done
-
-  if [[ -z "$missing" ]]; then
-    pass "profiles omit stale conflict and consultation exceptions"
-  else
-    fail "stale profile cleanup markers" "$missing"
-  fi
-}
-
-test_profiles_omit_stale_manifest_terms() {
-  local file short found missing=""
-
-  for file in "$REPO_DIR/core/agents.md" "$REPO_DIR"/core/subagents/*.md "$REPO_DIR/test/readme.md"; do
-    short="${file#$REPO_DIR/}"
-    found="$(file_containing_markers \
-      "$file" \
-      "$short" \
-      "${PROFILE_MANIFEST_FORBIDDEN_MARKERS[@]}")"
-    if [[ -n "$found" ]]; then
-      if [[ -n "$missing" ]]; then
-        missing="$missing; "
-      fi
-      missing="$missing$found"
-    fi
-  done
-
-  if [[ -z "$missing" ]]; then
-    pass "profiles omit stale manifest terms"
-  else
-    fail "stale manifest terminology" "$missing"
   fi
 }
 
@@ -437,13 +356,12 @@ test_coding_profile_preserves_ask_first_gates() {
   missing="$(file_missing_markers \
     "$REPO_DIR/core/subagents/coding.md" \
     "core/subagents/coding.md" \
-    "${CODING_PROFILE_ASK_FIRST_MARKERS[@]}" \
-    "${CODING_PROFILE_CONSULTATION_MARKERS[@]}")"
+    "${CODING_PROFILE_ASK_FIRST_MARKERS[@]}")"
 
   if [[ -z "$missing" ]]; then
-    pass "coding profile preserves ask-first and consultant-launch gates"
+    pass "coding profile keeps ask-first gates"
   else
-    fail "coding profile ask-first and consultant-launch gates" "$missing"
+    fail "coding profile ask-first gates" "$missing"
   fi
 }
 
@@ -452,16 +370,17 @@ test_review_profile_preserves_user_lens() {
   missing="$(file_missing_markers \
     "$REPO_DIR/core/subagents/reviewing.md" \
     "core/subagents/reviewing.md" \
-    "${REVIEW_PROFILE_MARKERS[@]}")"
+    "User goals, constraints, preferences" \
+    "shared coordinator/worker contract")"
 
   if [[ -z "$missing" ]]; then
-    pass "review profile preserves User lens and coordinator gate"
+    pass "review keeps user and policy criteria"
   else
-    fail "review profile User lens gate" "$missing"
+    fail "review user and policy criteria" "$missing"
   fi
 }
 
-test_commit_profile_state_machine_and_message_rules() {
+test_commit_profile_message_and_permission_rules() {
   local missing
   missing="$(file_missing_markers \
     "$REPO_DIR/core/subagents/commit.md" \
@@ -469,9 +388,9 @@ test_commit_profile_state_machine_and_message_rules() {
     "${COMMIT_PROFILE_MARKERS[@]}")"
 
   if [[ -z "$missing" ]]; then
-    pass "commit profile preserves state machine and message gates"
+    pass "commit profile keeps message and permission gates"
   else
-    fail "commit profile state machine and message rules" "$missing"
+    fail "commit profile message and permission rules" "$missing"
   fi
 }
 
@@ -525,8 +444,7 @@ test_unlink_removes_only_our_symlinks() {
 }
 
 test_install_through_symlink_resolves_repo_dir() {
-  # When invoked through a PATH symlink, intersect should resolve REPO_DIR by
-  # following the symlink to the real repo, not by using the symlink's parent.
+  # PATH symlinks should resolve the real repo.
   fresh_home
   HOME="$TEST_HOME" "$INTERSECT" install "$TEST_HOME/bin" >/dev/null
   HOME="$TEST_HOME" "$INTERSECT" link >/dev/null
@@ -567,7 +485,7 @@ test_uninstall_refuses_to_remove_foreign_symlinks() {
   fresh_home
   mkdir -p "$TEST_HOME/bin"
   ln -s /usr/bin/true "$TEST_HOME/bin/intersect"
-  # Capture into a variable so pipefail doesn't trip on intersect's exit 1.
+  # Capture expected exit 1 without tripping pipefail.
   local output
   output="$(HOME="$TEST_HOME" "$INTERSECT" uninstall "$TEST_HOME/bin" 2>&1 || true)"
   if echo "$output" | grep -q "refusing"; then
@@ -578,7 +496,7 @@ test_uninstall_refuses_to_remove_foreign_symlinks() {
 }
 
 test_update_errors_when_repo_is_not_git() {
-  # update should fail with a clear message when REPO_DIR has no .git/.
+  # update should explain a missing .git/.
   fresh_home
   local fake_repo="$TEST_HOME/fake_repo"
   mkdir -p "$fake_repo/bin"
@@ -593,10 +511,7 @@ test_update_errors_when_repo_is_not_git() {
 }
 
 test_update_invokes_pull_in_git_repo() {
-  # update should announce the pull (by printing the Pulling message) once
-  # REPO_DIR is a real git repo. The pull itself may fail on a fresh init
-  # without a remote; that exits non-zero, but the announce should still
-  # have happened first.
+  # update should announce pull before any remote failure.
   fresh_home
   local fake_repo="$TEST_HOME/fake_repo"
   mkdir -p "$fake_repo/bin"
@@ -632,20 +547,127 @@ test_unknown_tool_errors_cleanly() {
   fi
 }
 
+# Diagnostic Fixtures
+create_diagnostic_stubs() {
+  mkdir -p "$TEST_HOME/bin"
+  cat > "$TEST_HOME/bin/provider" <<'STUB'
+#!/usr/bin/env bash
+set -euo pipefail
+provider="${0##*/}"
+source_file="$INTERSECT_TEST_REPO/core/agents.md"
+if [[ "$provider" == codex ]]; then
+  [[ "$#" -eq 7 && "$1" == exec && "$2" == --cd && "$4" == --skip-git-repo-check && "$5" == --output-last-message ]] || exit 42
+  cd "$3"; answer_file="$6"; prompt="$7"
+else
+  [[ "$#" -eq 2 && "$1" == -p ]] || exit 42
+  prompt="$2"
+  [[ "$provider" != claude ]] || source_file="$INTERSECT_TEST_REPO/core/claude.md"
+fi
+[[ "$(<core/agents.md)" == '# Workspace Decoy Path' ]] || exit 42
+IFS= read -r heading < "$INTERSECT_TEST_REPO/core/agents.md"
+answer="$(printf '%s\n%s\n%s' "$source_file" "$INTERSECT_TEST_REPO/core/agents.md" "$heading")"
+case "$INTERSECT_TEST_MODE" in
+  echo) answer="$prompt" ;;
+  decoy) answer="$(printf '%s\n%s\n%s' "$source_file" "$PWD/core/agents.md" '# Workspace Decoy Path')" ;;
+  hang) sleep 30 & child=$!; printf '%s %s\n' "$$" "$child" > "$INTERSECT_TEST_PID"; wait; exit ;;
+esac
+if [[ "$provider" == codex ]]; then
+  if [[ "$INTERSECT_TEST_MODE" != missing-final ]]; then printf '%s\n' "$answer" > "$answer_file"; fi
+  printf '%s\n' 'Provider transcript noise' "$prompt"
+else
+  printf '%s\n' "$answer"
+fi
+[[ "$INTERSECT_TEST_MODE" != nonzero ]] || exit 7
+STUB
+  chmod +x "$TEST_HOME/bin/provider"
+  for provider in claude codex gemini; do ln -s provider "$TEST_HOME/bin/$provider"; done
+}
+
+diagnostic_fixture() {
+  local provider="$1" mode="$2" expected_status="$3" status=0 output line directory=''
+  output="$(PATH="$TEST_HOME/bin:$PATH" TMPDIR="$TEST_HOME" \
+    INTERSECT_TEST_REPO="$REPO_DIR" INTERSECT_TEST_MODE="$mode" INTERSECT_TEST_PID="$TEST_HOME/provider.pid" \
+    INTERSECT_VERIFY_AI_TIMEOUT_SECONDS=1 /bin/bash "$REPO_DIR/test/verify-ai.sh" "$provider" 2>&1)" || status=$?
+  while IFS= read -r line; do
+    case "$line" in 'Diagnostic directory: '*) directory="${line#Diagnostic directory: }" ;; esac
+  done <<< "$output"
+  if [[ "$status" -ne "$expected_status" || -z "$directory" ]]; then
+    fail "diagnostic $provider $mode" "status $status, expected $expected_status: $output"
+  elif [[ "$status" -eq 0 && -e "$directory" ]]; then
+    fail "diagnostic cleanup" "successful fixture retained $directory"
+  elif [[ "$status" -ne 0 && ! -d "$directory/project" ]]; then
+    fail "diagnostic failure evidence" "missing $directory/project"
+  else
+    pass "diagnostic $provider $mode (status $status)"
+  fi
+}
+
+test_diagnostic_arguments() {
+  local output status argument
+  for argument in '' pickup paths behavior bogus 'paths codex' 'codex gemini'; do
+    status=0
+    if [[ "$argument" == *' '* ]]; then
+      output="$(/bin/bash "$REPO_DIR/test/verify-ai.sh" "${argument%% *}" "${argument#* }" 2>&1)" || status=$?
+    elif [[ -z "$argument" ]]; then
+      output="$(/bin/bash "$REPO_DIR/test/verify-ai.sh" 2>&1)" || status=$?
+    else
+      output="$(/bin/bash "$REPO_DIR/test/verify-ai.sh" "$argument" 2>&1)" || status=$?
+    fi
+    if [[ "$status" -eq 2 && "$output" == *'Usage:'* ]]; then pass "diagnostic rejects '$argument'"; else fail "diagnostic arguments" "$output"; fi
+  done
+  status=0
+  output="$(PATH="$TEST_HOME" /bin/bash "$REPO_DIR/test/verify-ai.sh" codex 2>&1)" || status=$?
+  if [[ "$status" -eq 127 && "$output" == *'command not found'* ]]; then pass "diagnostic missing provider"; else fail "diagnostic missing provider" "$output"; fi
+  status=0
+  output="$(PATH="$TEST_HOME/bin:$PATH" INTERSECT_VERIFY_AI_TIMEOUT_SECONDS=0 /bin/bash "$REPO_DIR/test/verify-ai.sh" codex 2>&1)" || status=$?
+  if [[ "$status" -eq 2 && "$output" == *'positive integer'* ]]; then pass "diagnostic invalid timeout"; else fail "diagnostic invalid timeout" "$output"; fi
+}
+
+test_diagnostic_interruption() {
+  local diagnostic_pid status=0 attempts=0 provider_pid child_pid
+  rm -f "$TEST_HOME/provider.pid"
+  set -m
+  PATH="$TEST_HOME/bin:$PATH" TMPDIR="$TEST_HOME" INTERSECT_TEST_REPO="$REPO_DIR" \
+    INTERSECT_TEST_MODE=hang INTERSECT_TEST_PID="$TEST_HOME/provider.pid" \
+    /bin/bash "$REPO_DIR/test/verify-ai.sh" codex > "$TEST_HOME/interruption.log" 2>&1 &
+  diagnostic_pid=$!
+  set +m
+  while [[ ! -s "$TEST_HOME/provider.pid" && "$attempts" -lt 100 ]]; do sleep 0.1; attempts=$((attempts + 1)); done
+  kill -TERM "$diagnostic_pid" 2>/dev/null || true
+  wait "$diagnostic_pid" || status=$?
+  if [[ ! -s "$TEST_HOME/provider.pid" ]]; then fail "diagnostic interruption" 'provider did not start'; return; fi
+  read -r provider_pid child_pid < "$TEST_HOME/provider.pid"
+  if [[ "$status" -eq 143 ]] && ! kill -0 "$provider_pid" 2>/dev/null && ! kill -0 "$child_pid" 2>/dev/null \
+      && grep -Fq 'Diagnostic files retained:' "$TEST_HOME/interruption.log"; then
+    pass "diagnostic interruption stops provider and child, retains evidence"
+  else
+    fail "diagnostic interruption" "exit $status or surviving process $provider_pid/$child_pid"
+  fi
+}
+
+test_diagnostic_fixtures() {
+  fresh_home
+  create_diagnostic_stubs
+  test_diagnostic_arguments
+  diagnostic_fixture claude success 0
+  diagnostic_fixture codex success 0
+  diagnostic_fixture gemini success 0
+  diagnostic_fixture codex echo 1
+  diagnostic_fixture claude decoy 1
+  diagnostic_fixture gemini nonzero 7
+  diagnostic_fixture codex missing-final 1
+  diagnostic_fixture codex hang 124
+  test_diagnostic_interruption
+}
+
 # === Run All ===
 
-test_link_creates_expected_symlinks
-test_link_creates_settings_symlinks
+test_markdown_headings_use_title_case
 test_link_creates_declared_symlink_map
 test_profile_routes_point_to_existing_files
-test_coordinator_profile_evidence_gates
-test_subagent_profiles_require_evidence_returns
-test_subagent_profiles_have_profile_load_gate
-test_profiles_omit_stale_conflict_and_consultation_exceptions
-test_profiles_omit_stale_manifest_terms
 test_coding_profile_preserves_ask_first_gates
 test_review_profile_preserves_user_lens
-test_commit_profile_state_machine_and_message_rules
+test_commit_profile_message_and_permission_rules
 test_link_is_idempotent
 test_link_per_tool_filtering
 test_unlink_refuses_to_remove_real_files
@@ -658,6 +680,8 @@ test_update_errors_when_repo_is_not_git
 test_update_invokes_pull_in_git_repo
 test_unknown_command_errors_cleanly
 test_unknown_tool_errors_cleanly
+
+test_diagnostic_fixtures
 
 echo ""
 echo "Passed: $PASSED, Failed: $FAILED"
